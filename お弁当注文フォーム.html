@@ -894,7 +894,7 @@ const { labels: dates, isos: dateISOs } = getNextWeekDates();
 const closedDays = { 月: false, 水: false, 金: false };
 DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
 
-const selections = { 月: null, 水: null, 金: null };
+const selections = { 月: [], 水: [], 金: [] };
 const skipped    = { 月: false, 水: false, 金: false };
 
 // ── メニューエリア描画 ──────────────────────────
@@ -936,14 +936,16 @@ function renderDays() {
   const container = document.getElementById('days-container');
   container.innerHTML = DAYS.map((day, di) => {
     const isClosed = closedDays[day];
+    const items = selections[day];
+    const hasItems = items.length > 0;
     return `
     <div class="day-section" id="daysec-${day}">
       <div class="day-header">
         <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${day}曜日</div>
         <div class="day-date">${dates[di]}</div>
-        <div class="day-selected-name ${(!isClosed && selections[day]) ? '' : 'empty'}" id="dayname-${day}">
-          ${isClosed ? '提供なし' : selections[day]
-            ? ALL_MENUS.find(m => m.id === selections[day])?.name
+        <div class="day-selected-name ${(!isClosed && hasItems) ? '' : 'empty'}" id="dayname-${day}">
+          ${isClosed ? '提供なし' : hasItems
+            ? items.length + '品選択中'
             : (skipped[day] ? '— お休み —' : '未選択')}
         </div>
         ${isClosed ? '' : `
@@ -957,56 +959,114 @@ function renderDays() {
         : `<div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
             — この日はお休み —
            </div>
-           <div class="day-summary-card ${selections[day] ? 'active' : ''}" id="summarycard-${day}">
-             ${selections[day] ? (() => {
-               const m = ALL_MENUS.find(m => m.id === selections[day]);
+           <div class="day-items-list" id="itemslist-${day}">
+             ${items.map((menuId, idx) => {
+               const m = ALL_MENUS.find(m => m.id === menuId);
                const share = calcShare(m.price);
-               return `
+               return `<div class="day-summary-card active" style="margin-bottom:6px">
                  <div class="day-summary-menu">${m.name}</div>
                  <div class="day-summary-right">
                    <div class="day-summary-share">${m.price > 0 ? '自己負担 ¥' + share.toLocaleString() : '価格未定'}</div>
                    <div class="day-summary-price">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
                  </div>
-                 <button class="day-summary-clear" onclick="clearDay('${day}')">✕</button>`;
-             })() : ''}
+                 <button class="day-summary-clear" onclick="removeItem('${day}',${idx})">✕</button>
+               </div>`;
+             }).join('')}
            </div>`}
     </div>
   `}).join('');
 }
 
-// ── タップ処理 ──────────────────────────
+// ── タップ処理（曜日ポップアップで選択） ──────────────────────────
+let pendingMenuId = null;
+
 function tapMenu(menuId) {
-  const existDay = DAYS.find(d => selections[d] === menuId);
-  if (existDay) {
-    selections[existDay] = null;
-  } else {
-    const target = DAYS.find(d => !skipped[d] && !closedDays[d] && !selections[d])
-                || DAYS.find(d => !skipped[d] && !closedDays[d])
-                || DAYS[0];
-    selections[target] = menuId;
+  pendingMenuId = menuId;
+  // 追加できる曜日（休業・お休みでない）を調べる
+  const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  if (available.length === 0) return;
+  if (available.length === 1) {
+    // 1曜日しかないなら直接追加
+    addToDay(available[0], menuId);
+    return;
   }
+  showDayPicker(menuId, available);
+}
+
+function showDayPicker(menuId, available) {
+  const menu = ALL_MENUS.find(m => m.id === menuId);
+  const existing = document.getElementById('day-picker-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'day-picker-overlay';
+  overlay.style.cssText = `
+    position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000;
+    display:flex; align-items:flex-end; justify-content:center;
+  `;
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:20px 20px 0 0; padding:24px 20px 40px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-mid);margin-bottom:6px;">追加する曜日を選択</div>
+      <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.name}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${available.map((d, i) => `
+          <button onclick="addToDay('${d}','${menuId}')" style="
+            padding:14px 18px; background:var(--cream); border:2px solid rgba(26,61,43,0.10);
+            border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700;
+            color:var(--text-dark); cursor:pointer; text-align:left; display:flex;
+            align-items:center; justify-content:space-between;
+          ">
+            <span>${d}曜日 <span style="font-size:12px;color:var(--text-light);font-weight:400;">${dates[DAYS.indexOf(d)]}</span></span>
+            <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].length + '品選択中' : '未選択'}</span>
+          </button>`).join('')}
+      </div>
+      <button onclick="closeDayPicker()" style="
+        margin-top:16px; width:100%; padding:14px; background:none;
+        border:2px solid rgba(26,61,43,0.12); border-radius:12px;
+        font-family:'Noto Sans JP',sans-serif; font-size:14px; font-weight:700;
+        color:var(--text-light); cursor:pointer;
+      ">キャンセル</button>
+    </div>
+  `;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeDayPicker(); });
+  document.body.appendChild(overlay);
+}
+
+function addToDay(day, menuId) {
+  selections[day].push(menuId);
+  closeDayPicker();
   updateAll();
 }
 
+function removeItem(day, idx) {
+  selections[day].splice(idx, 1);
+  updateAll();
+}
+
+function closeDayPicker() {
+  const el = document.getElementById('day-picker-overlay');
+  if (el) el.remove();
+  pendingMenuId = null;
+}
+
 function clearDay(day) {
-  selections[day] = null;
+  selections[day] = [];
   updateAll();
 }
 
 function toggleSkip(day) {
   skipped[day] = document.getElementById(`skip-${day}`).checked;
-  if (skipped[day]) selections[day] = null;
+  if (skipped[day]) selections[day] = [];
   updateAll();
 }
 
 function updateAll() {
-  // ボタン状態
-  const usedIds = new Set(Object.values(selections).filter(Boolean));
+  // メニューボタン：どこかの曜日に1つ以上入っていたらselected
   ALL_MENUS.forEach(m => {
     const btn = document.getElementById(`mbtn-${m.id}`);
     if (!btn) return;
-    btn.classList.toggle('selected', usedIds.has(m.id));
-    btn.classList.toggle('dimmed', false);
+    const isSelected = DAYS.some(d => selections[d].includes(m.id));
+    btn.classList.toggle('selected', isSelected);
   });
 
   // 曜日行を再描画
@@ -1015,16 +1075,19 @@ function updateAll() {
   // サマリー更新
   let total = 0;
   const rows = document.getElementById('summary-rows');
-  rows.innerHTML = DAYS.map((day, di) => {
-    const menu = ALL_MENUS.find(m => m.id === selections[day]);
+  rows.innerHTML = DAYS.map((day) => {
+    const items = selections[day];
     const isSkip = skipped[day];
-    if (menu) {
-      const share = calcShare(menu.price);
-      if (menu.price > 0) total += share;
-      return `<div class="summary-row">
+    if (items.length > 0) {
+      const dayTotal = items.reduce((sum, id) => {
+        const m = ALL_MENUS.find(m => m.id === id);
+        return sum + (m && m.price > 0 ? calcShare(m.price) : 0);
+      }, 0);
+      total += dayTotal;
+      return `<div class="summary-row" style="align-items:flex-start">
         <span class="summary-row-day">${day}曜</span>
-        <span class="summary-row-menu">${menu.name}</span>
-        <span class="summary-row-price">${menu.price > 0 ? '¥' + share.toLocaleString() + ' <span style="font-size:10px;color:var(--text-light)">（自己負担）</span>' : '価格未定'}</span>
+        <span class="summary-row-menu">${items.map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・')}</span>
+        <span class="summary-row-price">¥${dayTotal.toLocaleString()} <span style="font-size:10px;color:var(--text-light)">（自己負担）</span></span>
       </div>`;
     }
     return `<div class="summary-row">
@@ -1082,7 +1145,7 @@ function handleSubmit() {
     nameErr.classList.remove('visible');
   }
 
-  const hasOrder = DAYS.some(d => selections[d] !== null);
+  const hasOrder = DAYS.some(d => selections[d].length > 0);
   if (!hasOrder) {
     orderErr.classList.add('visible');
     valid = false;
@@ -1093,8 +1156,10 @@ function handleSubmit() {
 
   let totalShare = 0;
   DAYS.forEach(d => {
-    const menu = ALL_MENUS.find(m => m.id === selections[d]);
-    if (menu && menu.price > 0) totalShare += calcShare(menu.price);
+    selections[d].forEach(id => {
+      const menu = ALL_MENUS.find(m => m.id === id);
+      if (menu && menu.price > 0) totalShare += calcShare(menu.price);
+    });
   });
 
   if (GAS_URL !== 'YOUR_GAS_URL_HERE') {
@@ -1102,9 +1167,9 @@ function handleSubmit() {
       method: 'POST',
       body: JSON.stringify({
         name: nameEl.value,
-        mon: selections['月'] ? ALL_MENUS.find(m => m.id === selections['月']).name : '',
-        wed: selections['水'] ? ALL_MENUS.find(m => m.id === selections['水']).name : '',
-        fri: selections['金'] ? ALL_MENUS.find(m => m.id === selections['金']).name : '',
+        mon: selections['月'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
+        wed: selections['水'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
+        fri: selections['金'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
         totalShare,
       })
     }).catch(() => {});
@@ -1115,10 +1180,16 @@ function handleSubmit() {
 
   let html = `<div class="success-detail-row"><span class="success-detail-key">氏名</span><span>${nameEl.value}</span></div>`;
   DAYS.forEach((day, di) => {
-    const menu = ALL_MENUS.find(m => m.id === selections[day]);
-    const label = menu
-      ? `${menu.name}${menu.price > 0 ? '（自己負担 ¥' + calcShare(menu.price).toLocaleString() + '）' : '（価格未定）'}`
-      : (skipped[day] ? 'お休み' : '注文なし');
+    const items = selections[day];
+    let label;
+    if (items.length > 0) {
+      label = items.map(id => {
+        const m = ALL_MENUS.find(m => m.id === id);
+        return m ? `${m.name}${m.price > 0 ? '（¥' + calcShare(m.price).toLocaleString() + '）' : ''}` : '';
+      }).join('、');
+    } else {
+      label = skipped[day] ? 'お休み' : '注文なし';
+    }
     html += `<div class="success-detail-row"><span class="success-detail-key">${day}曜 ${dates[di]}</span><span>${label}</span></div>`;
   });
   html += `<div class="success-detail-row"><span class="success-detail-key">自己負担合計</span><span>¥${totalShare.toLocaleString()}</span></div>`;
@@ -1126,7 +1197,7 @@ function handleSubmit() {
 }
 
 function resetForm() {
-  DAYS.forEach(d => { selections[d] = null; skipped[d] = false; });
+  DAYS.forEach(d => { selections[d] = []; skipped[d] = false; });
   document.getElementById('name-select').value = '';
   document.getElementById('success-screen').classList.remove('visible');
   document.getElementById('form-area').style.display = '';
