@@ -715,7 +715,7 @@
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0ABUvGQzroalTT2j_miR_nwAA_ilsJszMdaItzGkNP-sFQ/exec';
+const GAS_URL = 'YOUR_GAS_URL_HERE';
 const COMPANY_MAX = 350;
 
 // ─────────────────────────────────────────────────────
@@ -761,11 +761,19 @@ function showSuggestions(list, q) {
 }
 
 function selectName(name) {
-  const input = document.getElementById('name-select');
+  const input = document.getElementById("name-select");
   input.value = name;
   closeSuggestions();
-  input.classList.remove('error-field');
-  document.getElementById('name-error').classList.remove('visible');
+  input.classList.remove("error-field");
+  document.getElementById("name-error").classList.remove("visible");
+  // 名前確定後、全曜日選択済みなら送信ボタンへ
+  const activeDays = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  const allSelected = activeDays.length > 0 && activeDays.every(d => selections[d].length > 0);
+  if (allSelected) {
+    setTimeout(() => {
+      document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+  }
 }
 
 function closeSuggestions() {
@@ -1036,6 +1044,19 @@ function addToDay(day, menuId) {
   selections[day].push(menuId);
   closeDayPicker();
   updateAll();
+  const activeDays = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  const allSelected = activeDays.every(d => selections[d].length > 0);
+  if (allSelected) {
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
 }
 
 function removeItem(day, idx) {
@@ -1139,6 +1160,8 @@ function handleSubmit() {
     nameEl.classList.add('error-field');
     nameErr.classList.add('visible');
     nameErr.textContent = nameEl.value ? 'リストから名前を選択してください' : '名前を選択してください';
+    nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => nameEl.focus(), 400);
     valid = false;
   } else {
     nameEl.classList.remove('error-field');
