@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>注文確認</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Serif+Display:ital@0;1&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep:   #1a3d2b;
+    --green-mid:    #2d6a4f;
+    --green-bright: #52b788;
+    --green-pale:   #d8f3dc;
+    --cream:        #faf7f2;
+    --warm-white:   #fffef9;
+    --orange-accent:#e07a2f;
+    --text-dark:    #1c1c1c;
+    --text-mid:     #4a4a4a;
+    --text-light:   #8a8a8a;
+    --shadow-card:  0 4px 24px rgba(26,61,43,0.10), 0 1px 4px rgba(26,61,43,0.06);
+    --shadow-hover: 0 12px 40px rgba(26,61,43,0.18), 0 2px 8px rgba(26,61,43,0.10);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--green-deep);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(82,183,136,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 20px 28px;
+    position: relative;
+    z-index: 1;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(82,183,136,0.18);
+    border: 1px solid rgba(82,183,136,0.35);
+    color: var(--green-bright);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 4vw, 36px);
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .header-title em { font-style: italic; color: var(--green-bright); }
+  .header-sub {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+  }
+  .header-week {
+    margin-top: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--orange-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 100px;
+    box-shadow: 0 4px 16px rgba(224,122,47,0.4);
+  }
+
+  /* MAIN */
+  .main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 16px 80px;
+  }
+
+  /* LOADING / ERROR */
+  .state-card {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    padding: 48px 20px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+  }
+  .state-icon { font-size: 48px; margin-bottom: 16px; }
+  .state-title { font-size: 16px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+  .state-sub { font-size: 13px; color: var(--text-light); line-height: 1.7; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--green-pale);
+    border-top-color: var(--green-bright);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+    flex: 1;
+    min-width: 120px;
+  }
+  .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 900; color: var(--green-deep); }
+  .stat-value small { font-size: 12px; font-weight: 500; color: var(--text-light); margin-left: 4px; }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-header {
+    padding: 18px 20px 12px;
+    border-bottom: 1px solid rgba(26,61,43,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .table-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+  }
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: var(--green-pale);
+    border: none;
+    border-radius: 100px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-deep);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .refresh-btn:hover { background: var(--green-bright); color: #fff; transform: translateY(-1px); }
+  .refresh-btn.loading .refresh-icon { animation: spin 0.8s linear infinite; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: var(--green-deep);
+    color: #fff;
+  }
+  thead th {
+    padding: 12px 14px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-align: left;
+    white-space: nowrap;
+  }
+  thead th:first-child { border-radius: 0; }
+  tbody tr {
+    border-bottom: 1px solid rgba(26,61,43,0.05);
+    transition: background 0.12s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(82,183,136,0.04); }
+  tbody tr.highlight { background: rgba(82,183,136,0.08); }
+  td {
+    padding: 12px 14px;
+    vertical-align: top;
+    color: var(--text-dark);
+  }
+  td.name-cell {
+    font-weight: 700;
+    color: var(--green-deep);
+    white-space: nowrap;
+    min-width: 72px;
+  }
+  td.menu-cell { min-width: 100px; }
+  .menu-tag {
+    display: inline-block;
+    background: var(--green-pale);
+    color: var(--green-deep);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin: 2px 2px 2px 0;
+    white-space: nowrap;
+  }
+  .empty-cell {
+    color: var(--text-light);
+    font-style: italic;
+    font-size: 12px;
+  }
+  td.total-cell {
+    font-weight: 900;
+    color: var(--green-mid);
+    white-space: nowrap;
+  }
+  td.ts-cell {
+    color: var(--text-light);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* EMPTY STATE */
+  .empty-row td {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-light);
+    font-size: 14px;
+  }
+
+  /* WEEK FILTER */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+    margin-right: 4px;
+  }
+  .week-chip {
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 2px solid rgba(26,61,43,0.10);
+    background: var(--warm-white);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .week-chip:hover { border-color: var(--green-bright); color: var(--green-deep); }
+  .week-chip.active {
+    background: var(--green-deep);
+    border-color: var(--green-deep);
+    color: #fff;
+  }
+
+  /* BACK LINK */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--green-mid);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 20px;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--green-deep); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.4s ease both; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="header-badge">Order Status</div>
+    <h1 class="header-title">注文<em>確認</em>ページ</h1>
+    <p class="header-sub">全員の注文状況を確認できます</p>
+    <div class="header-week" id="header-week">📅 読み込み中…</div>
+  </div>
+</header>
+
+<main class="main">
+  <a href="お弁当注文フォーム.html" class="back-link">← 注文フォームに戻る</a>
+
+  <!-- ローディング -->
+  <div class="state-card fade-in" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-title">注文データを取得中…</div>
+    <div class="state-sub">しばらくお待ちください</div>
+  </div>
+
+  <!-- エラー -->
+  <div class="state-card fade-in" id="error-state" style="display:none">
+    <div class="state-icon">⚠️</div>
+    <div class="state-title">データを取得できませんでした</div>
+    <div class="state-sub" id="error-msg">GAS_URLが正しく設定されているか確認してください</div>
+    <button class="refresh-btn" style="margin:16px auto 0" onclick="loadOrders()">再読み込み</button>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div id="main-content" style="display:none">
+
+    <!-- 統計 -->
+    <div class="stats-bar fade-in" id="stats-bar"></div>
+
+    <!-- 週フィルター -->
+    <div class="filter-bar fade-in" id="filter-bar">
+      <span class="filter-label">対象週</span>
+    </div>
+
+    <!-- テーブル -->
+    <div class="table-wrap fade-in">
+      <div class="table-header">
+        <div class="table-title">注文一覧</div>
+        <button class="refresh-btn" id="refresh-btn" onclick="loadOrders()">
+          <span class="refresh-icon">↻</span> 更新
+        </button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>氏名</th>
+              <th>月曜</th>
+              <th>水曜</th>
+              <th>金曜</th>
+              <th>自己負担合計</th>
+              <th>送信日時</th>
+            </tr>
+          </thead>
+          <tbody id="order-table-body">
+            <tr class="empty-row"><td colspan="6">データがありません</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0ABUvGQzroalTT2j_miR_nwAA_ilsJszMdaItzGkNP-sFQ/exec';
+
+// 翌週の月水金ラベルを生成
+function getNextWeekLabel() {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysToMon = dow === 0 ? 1 : (8 - dow) % 7 || 7;
+  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
+  const wed = new Date(mon); wed.setDate(mon.getDate() + 2);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  return `翌週 ${fmt(mon)}(月)・${fmt(wed)}(水)・${fmt(fri)}(金)`;
+}
+
+document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel();
+
+let allOrders = [];
+let selectedWeek = 'all';
+
+async function loadOrders() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) btn.classList.add('loading');
+
+  document.getElementById('loading-state').style.display = '';
+  document.getElementById('error-state').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+
+  try {
+    if (GAS_URL === 'YOUR_GAS_URL_HERE') throw new Error('GAS_URLを設定してください');
+
+    const res = await fetch(GAS_URL);
+    const json = await res.json();
+    allOrders = json.orders || [];
+
+    renderAll();
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('main-content').style.display = '';
+  } catch(err) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('error-state').style.display = '';
+    document.getElementById('error-msg').textContent = err.message;
+  }
+
+  if (btn) btn.classList.remove('loading');
+}
+
+function renderAll() {
+  renderWeekFilter();
+  renderStats();
+  renderTable();
+}
+
+function getWeeks() {
+  const weeks = new Set();
+  allOrders.forEach(o => { if (o.weekLabel) weeks.add(o.weekLabel); });
+  return [...weeks].sort().reverse();
+}
+
+function getFilteredOrders() {
+  if (selectedWeek === 'all') return allOrders;
+  return allOrders.filter(o => o.weekLabel === selectedWeek);
+}
+
+function renderWeekFilter() {
+  const bar = document.getElementById('filter-bar');
+  const weeks = getWeeks();
+  bar.innerHTML = '<span class="filter-label">対象週</span>';
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'week-chip' + (selectedWeek === 'all' ? ' active' : '');
+  allBtn.textContent = 'すべて';
+  allBtn.onclick = () => { selectedWeek = 'all'; renderAll(); };
+  bar.appendChild(allBtn);
+
+  weeks.forEach(w => {
+    const btn = document.createElement('button');
+    btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
+    btn.textContent = w;
+    btn.onclick = () => { selectedWeek = w; renderAll(); };
+    bar.appendChild(btn);
+  });
+}
+
+function renderStats() {
+  const orders = getFilteredOrders();
+  const totalPeople = new Set(orders.map(o => o.name)).size;
+  const totalAmount = orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const totalOrders = orders.length;
+
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">注文件数</div>
+      <div class="stat-value">${totalOrders}<small>件</small></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">注文人数</div>
+      <div class="stat-value">${totalPeople}<small>名</small></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">自己負担合計</div>
+      <div class="stat-value">¥${totalAmount.toLocaleString()}</div>
+    </div>
+  `;
+}
+
+function menuCell(menuStr) {
+  if (!menuStr) return '<span class="empty-cell">—</span>';
+  return menuStr.split('・').map(m => `<span class="menu-tag">${m}</span>`).join('');
+}
+
+function renderTable() {
+  const orders = getFilteredOrders();
+  const tbody = document.getElementById('order-table-body');
+
+  if (!orders.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">注文がありません</td></tr>';
+    return;
+  }
+
+  // 最新順に表示
+  const sorted = [...orders].reverse();
+  tbody.innerHTML = sorted.map(o => `
+    <tr>
+      <td class="name-cell">${o.name}</td>
+      <td class="menu-cell">${menuCell(o.mon)}</td>
+      <td class="menu-cell">${menuCell(o.wed)}</td>
+      <td class="menu-cell">${menuCell(o.fri)}</td>
+      <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
+      <td class="ts-cell">${o.ts}</td>
+    </tr>
+  `).join('');
+}
+
+// 初回読み込み
+loadOrders();
+</script>
+</body>
+</html>
