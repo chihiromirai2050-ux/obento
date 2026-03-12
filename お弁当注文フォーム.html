@@ -1243,13 +1243,16 @@ function handleSubmit() {
         totalShare,
         weekLabel: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
       })
+    }).then(() => {
+      // POST完了後にGETをプリフェッチ→確認ページ到着時にキャッシュから即表示
+      fetch(GAS_URL).catch(() => {});
     }).catch(() => {});
   }
 
-  // 注文完了後、確認ページへリダイレクト
+  // 注文完了後、確認ページへリダイレクト（プリフェッチの時間を確保）
   setTimeout(() => {
     window.location.href = 'confirm.html?ordered=1';
-  }, 800);
+  }, 1200);
 }
 
 function resetForm() {
