@@ -342,7 +342,7 @@
     <div class="state-icon">⚠️</div>
     <div class="state-title">データを取得できませんでした</div>
     <div class="state-sub" id="error-msg">GAS_URLが正しく設定されているか確認してください</div>
-    <button class="refresh-btn" style="margin:16px auto 0" onclick="loadOrders()">再読み込み</button>
+    <button class="refresh-btn" style="margin:16px auto 0" onclick="loadOrders(true)">再読み込み</button>
   </div>
 
   <!-- メインコンテンツ -->
@@ -360,7 +360,7 @@
     <div class="table-wrap fade-in">
       <div class="table-header">
         <div class="table-title">注文一覧</div>
-        <button class="refresh-btn" id="refresh-btn" onclick="loadOrders()">
+        <button class="refresh-btn" id="refresh-btn" onclick="loadOrders(true)">
           <span class="refresh-icon">↻</span> 更新
         </button>
       </div>
@@ -412,7 +412,7 @@ if (new URLSearchParams(window.location.search).get('ordered') === '1') {
 let allOrders = [];
 let selectedWeek = null;
 
-async function loadOrders() {
+async function loadOrders(force = false) {
   const btn = document.getElementById('refresh-btn');
   if (btn) btn.classList.add('loading');
 
@@ -423,7 +423,7 @@ async function loadOrders() {
   try {
     if (GAS_URL === 'YOUR_GAS_URL_HERE') throw new Error('GAS_URLを設定してください');
 
-    const res = await fetch(GAS_URL);
+    const res = await fetch(GAS_URL, { cache: force ? 'no-cache' : 'force-cache' });
     const json = await res.json();
     allOrders = json.orders || [];
     // デフォルトを最新週に設定
