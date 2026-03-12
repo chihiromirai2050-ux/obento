@@ -954,18 +954,18 @@ function renderDays() {
         <div class="day-selected-name ${(!isClosed && hasItems) ? '' : 'empty'}" id="dayname-${day}">
           ${isClosed ? '提供なし' : hasItems
             ? items.length + '品選択中'
-            : (skipped[day] ? '— お休み —' : '未選択')}
+            : (skipped[day] ? '— 注文なし —' : '未選択')}
         </div>
         ${isClosed ? '' : `
         <label class="day-skip">
           <input type="checkbox" id="skip-${day}" ${skipped[day] ? 'checked' : ''} onchange="toggleSkip('${day}')">
-          お休み
+          注文なし
         </label>`}
       </div>
       ${isClosed
         ? `<div class="day-closed-card">🔒 この日はお弁当の提供がありません</div>`
         : `<div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
-            — この日はお休み —
+            — 注文なし —
            </div>
            <div class="day-items-list" id="itemslist-${day}">
              ${items.map((menuId, idx) => {
@@ -1017,16 +1017,26 @@ function showDayPicker(menuId, available) {
       <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-mid);margin-bottom:6px;">追加する曜日を選択</div>
       <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.name}</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        ${available.map((d, i) => `
-          <button onclick="addToDay('${d}','${menuId}')" style="
-            padding:14px 18px; background:var(--cream); border:2px solid rgba(26,61,43,0.10);
-            border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700;
-            color:var(--text-dark); cursor:pointer; text-align:left; display:flex;
-            align-items:center; justify-content:space-between;
-          ">
-            <span>${d}曜日 <span style="font-size:12px;color:var(--text-light);font-weight:400;">${dates[DAYS.indexOf(d)]}</span></span>
-            <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].length + '品選択中' : '未選択'}</span>
-          </button>`).join('')}
+        ${DAYS.filter(d => !closedDays[d]).map((d) => `
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <button onclick="addToDay('${d}','${menuId}')" style="
+              flex:1; padding:14px 18px; background:${available.includes(d) ? 'var(--cream)' : '#f9f9f9'};
+              border:2px solid ${available.includes(d) ? 'rgba(26,61,43,0.10)' : 'rgba(26,61,43,0.05)'};
+              border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700;
+              color:${available.includes(d) ? 'var(--text-dark)' : 'var(--text-light)'}; cursor:pointer; text-align:left; display:flex;
+              align-items:center; justify-content:space-between;
+              ${skipped[d] ? 'opacity:0.4;pointer-events:none;' : ''}
+            ">
+              <span>${d}曜日 <span style="font-size:12px;color:var(--text-light);font-weight:400;">${dates[DAYS.indexOf(d)]}</span></span>
+              <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].length + '品選択中' : '未選択'}</span>
+            </button>
+            <button onclick="toggleSkipFromPicker('${d}')" style="
+              padding:10px 14px; background:${skipped[d] ? '#fee2e2' : 'var(--cream)'};
+              border:2px solid ${skipped[d] ? '#fca5a5' : 'rgba(26,61,43,0.10)'};
+              border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:12px; font-weight:700;
+              color:${skipped[d] ? '#dc2626' : 'var(--text-light)'}; cursor:pointer; white-space:nowrap;
+            ">${skipped[d] ? '✕ 注文なし' : '注文なし'}</button>
+          </div>`).join('')}
       </div>
       <button onclick="closeDayPicker()" style="
         margin-top:16px; width:100%; padding:14px; background:none;
@@ -1061,6 +1071,15 @@ function addToDay(day, menuId) {
 
 function removeItem(day, idx) {
   selections[day].splice(idx, 1);
+  updateAll();
+}
+
+function toggleSkipFromPicker(day) {
+  skipped[day] = !skipped[day];
+  if (skipped[day]) selections[day] = [];
+  // ポップアップを再描画
+  const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  showDayPicker(pendingMenuId, available);
   updateAll();
 }
 
@@ -1113,7 +1132,7 @@ function updateAll() {
     }
     return `<div class="summary-row">
       <span class="summary-row-day">${day}曜</span>
-      <span class="summary-row-none">${isSkip ? 'お休み' : '未選択'}</span>
+      <span class="summary-row-none">${isSkip ? '注文なし' : '未選択'}</span>
       <span class="summary-row-price" style="color:var(--text-light)">—</span>
     </div>`;
   }).join('');
@@ -1199,25 +1218,10 @@ function handleSubmit() {
     }).catch(() => {});
   }
 
-  document.getElementById('form-area').style.display = 'none';
-  document.getElementById('success-screen').classList.add('visible');
-
-  let html = `<div class="success-detail-row"><span class="success-detail-key">氏名</span><span>${nameEl.value}</span></div>`;
-  DAYS.forEach((day, di) => {
-    const items = selections[day];
-    let label;
-    if (items.length > 0) {
-      label = items.map(id => {
-        const m = ALL_MENUS.find(m => m.id === id);
-        return m ? `${m.name}${m.price > 0 ? '（¥' + calcShare(m.price).toLocaleString() + '）' : ''}` : '';
-      }).join('、');
-    } else {
-      label = skipped[day] ? 'お休み' : '注文なし';
-    }
-    html += `<div class="success-detail-row"><span class="success-detail-key">${day}曜 ${dates[di]}</span><span>${label}</span></div>`;
-  });
-  html += `<div class="success-detail-row"><span class="success-detail-key">自己負担合計</span><span>¥${totalShare.toLocaleString()}</span></div>`;
-  document.getElementById('success-detail').innerHTML = html;
+  // 注文完了後、確認ページへリダイレクト
+  setTimeout(() => {
+    window.location.href = 'confirm.html?ordered=1';
+  }, 800);
 }
 
 function resetForm() {
