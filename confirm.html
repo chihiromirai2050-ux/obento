@@ -345,7 +345,7 @@
   <div id="main-content" style="display:none">
 
     <!-- 統計 -->
-    <div class="stats-bar fade-in" id="stats-bar"></div>
+
 
     <!-- 週フィルター -->
     <div class="filter-bar fade-in" id="filter-bar">
@@ -368,7 +368,7 @@
               <th>月曜</th>
               <th>水曜</th>
               <th>金曜</th>
-              <th>自己負担合計</th>
+
               <th>送信日時</th>
             </tr>
           </thead>
@@ -435,7 +435,6 @@ async function loadOrders() {
 
 function renderAll() {
   renderWeekFilter();
-  renderStats();
   renderTable();
 }
 
@@ -446,7 +445,7 @@ function getWeeks() {
 }
 
 function getFilteredOrders() {
-  if (!selectedWeek || selectedWeek === 'all') return allOrders;
+  if (!selectedWeek) return allOrders;
   return allOrders.filter(o => o.weekLabel === selectedWeek);
 }
 
@@ -454,12 +453,6 @@ function renderWeekFilter() {
   const bar = document.getElementById('filter-bar');
   const weeks = getWeeks();
   bar.innerHTML = '<span class="filter-label">対象週</span>';
-
-  const allBtn = document.createElement('button');
-  allBtn.className = 'week-chip' + (!selectedWeek || selectedWeek === 'all' ? ' active' : '');
-  allBtn.textContent = 'すべて';
-  allBtn.onclick = () => { selectedWeek = 'all'; renderAll(); };
-  bar.appendChild(allBtn);
 
   weeks.forEach(w => {
     const btn = document.createElement('button');
@@ -502,7 +495,7 @@ function renderTable() {
   const tbody = document.getElementById('order-table-body');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">注文がありません</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">注文がありません</td></tr>';
     return;
   }
 
@@ -514,7 +507,6 @@ function renderTable() {
       <td class="menu-cell">${menuCell(o.mon)}</td>
       <td class="menu-cell">${menuCell(o.wed)}</td>
       <td class="menu-cell">${menuCell(o.fri)}</td>
-      <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
       <td class="ts-cell">${o.ts}</td>
     </tr>
   `).join('');
