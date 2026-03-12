@@ -766,10 +766,9 @@ function selectName(name) {
   closeSuggestions();
   input.classList.remove("error-field");
   document.getElementById("name-error").classList.remove("visible");
-  // 名前確定後、全曜日選択済みなら送信ボタンへ
-  const activeDays = DAYS.filter(d => !skipped[d] && !closedDays[d]);
-  const allSelected = activeDays.length > 0 && activeDays.every(d => selections[d].length > 0);
-  if (allSelected) {
+  // 名前確定後、全曜日が揃っていれば送信ボタンへ
+  const allDoneOnName = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (allDoneOnName) {
     setTimeout(() => {
       document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
     }, 300);
@@ -1051,12 +1050,14 @@ function showDayPicker(menuId, available) {
 }
 
 function addToDay(day, menuId) {
+  // 追加前に揃っていたか記録
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   selections[day].push(menuId);
   closeDayPicker();
   updateAll();
-  const activeDays = DAYS.filter(d => !skipped[d] && !closedDays[d]);
-  const allSelected = activeDays.every(d => selections[d].length > 0);
-  if (allSelected) {
+  // 揃った瞬間だけスクロール（すでに揃っていた場合はスクロールしない）
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
     setTimeout(() => {
       const nameVal = document.getElementById("name-select").value.trim();
       if (!nameVal || !NAMES.includes(nameVal)) {
@@ -1075,12 +1076,26 @@ function removeItem(day, idx) {
 }
 
 function toggleSkipFromPicker(day) {
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   skipped[day] = !skipped[day];
   if (skipped[day]) selections[day] = [];
   // ポップアップを再描画
   const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
   showDayPicker(pendingMenuId, available);
   updateAll();
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
+    closeDayPicker();
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
 }
 
 function closeDayPicker() {
@@ -1095,9 +1110,22 @@ function clearDay(day) {
 }
 
 function toggleSkip(day) {
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   skipped[day] = document.getElementById(`skip-${day}`).checked;
   if (skipped[day]) selections[day] = [];
   updateAll();
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
 }
 
 function updateAll() {
