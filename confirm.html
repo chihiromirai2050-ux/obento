@@ -400,7 +400,7 @@ function getNextWeekLabel() {
 document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel();
 
 let allOrders = [];
-let selectedWeek = 'all';
+let selectedWeek = null;
 
 async function loadOrders() {
   const btn = document.getElementById('refresh-btn');
@@ -416,6 +416,9 @@ async function loadOrders() {
     const res = await fetch(GAS_URL);
     const json = await res.json();
     allOrders = json.orders || [];
+    // デフォルトを最新週に設定
+    const weeks = getWeeks();
+    if (weeks.length > 0) selectedWeek = weeks[0];
 
     renderAll();
 
@@ -443,7 +446,7 @@ function getWeeks() {
 }
 
 function getFilteredOrders() {
-  if (selectedWeek === 'all') return allOrders;
+  if (!selectedWeek || selectedWeek === 'all') return allOrders;
   return allOrders.filter(o => o.weekLabel === selectedWeek);
 }
 
@@ -453,7 +456,7 @@ function renderWeekFilter() {
   bar.innerHTML = '<span class="filter-label">対象週</span>';
 
   const allBtn = document.createElement('button');
-  allBtn.className = 'week-chip' + (selectedWeek === 'all' ? ' active' : '');
+  allBtn.className = 'week-chip' + (!selectedWeek || selectedWeek === 'all' ? ' active' : '');
   allBtn.textContent = 'すべて';
   allBtn.onclick = () => { selectedWeek = 'all'; renderAll(); };
   bar.appendChild(allBtn);
