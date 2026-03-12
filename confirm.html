@@ -369,6 +369,7 @@
               <th>水曜</th>
               <th>金曜</th>
 
+              <th>自己負担合計</th>
               <th>送信日時</th>
             </tr>
           </thead>
@@ -495,7 +496,7 @@ function renderTable() {
   const tbody = document.getElementById('order-table-body');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">注文がありません</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">注文がありません</td></tr>';
     return;
   }
 
@@ -507,6 +508,7 @@ function renderTable() {
       <td class="menu-cell">${menuCell(o.mon)}</td>
       <td class="menu-cell">${menuCell(o.wed)}</td>
       <td class="menu-cell">${menuCell(o.fri)}</td>
+      <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
       <td class="ts-cell">${o.ts}</td>
     </tr>
   `).join('');
