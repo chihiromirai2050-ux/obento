@@ -874,6 +874,9 @@ const SERIES = [
       { id:'O04', name:'カレー',                 price: 450 },
       { id:'O06', name:'焼き肉1.5',              price: 780 },
       { id:'O07', name:'チャオ',                 price: 780 },
+      { id:'O08', name:'海苔のみそ汁',             price: 160 },
+      { id:'O09', name:'とん汁',                   price: 160 },
+      { id:'O10', name:'あさり',                   price: 160 },
     ]
   },
 ];
@@ -1232,6 +1235,16 @@ function handleSubmit() {
     });
   });
 
+  // 定価合計・会社負担合計を計算
+  let totalFull = 0;
+  DAYS.forEach(d => {
+    selections[d].forEach(id => {
+      const menu = ALL_MENUS.find(m => m.id === id);
+      if (menu && menu.price > 0) totalFull += menu.price;
+    });
+  });
+  const totalCompany = totalFull - totalShare;
+
   if (GAS_URL !== 'YOUR_GAS_URL_HERE') {
     fetch(GAS_URL, {
       method: 'POST',
@@ -1241,7 +1254,10 @@ function handleSubmit() {
         wed: selections['水'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
         fri: selections['金'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
         totalShare,
+        totalFull,
+        totalCompany,
         weekLabel: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
+        deliveryDates: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
       })
     }).then(() => {
       // POST完了後にGETをプリフェッチ→確認ページ到着時にキャッシュから即表示
