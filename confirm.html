@@ -496,6 +496,7 @@ function renderStats() {
 }
 
 function menuCell(menuStr) {
+  menuStr = menuStr ? String(menuStr) : '';
   if (!menuStr) return '<span class="empty-cell">—</span>';
   return menuStr.split('・').map(m => `<span class="menu-tag">${m}</span>`).join('');
 }
