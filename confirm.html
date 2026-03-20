@@ -324,6 +324,13 @@
       <div style="font-family:'DM Serif Display',serif; font-size:22px; color:#fff; margin-bottom:6px;">注文完了！🎉</div>
       <div style="font-size:13px; color:rgba(255,255,255,0.8); line-height:1.7;">ご注文を受け付けました。<br>変更・キャンセルは担当者までご連絡ください。</div>
     </div>
+    <!-- アンケート -->
+    <div id="survey-area" style="display:none; margin-top:16px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.2); border-radius:14px; padding:16px 20px;">
+      <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:10px;">お弁当についてご意見、ご要望があれば記入してください。</div>
+      <textarea id="survey-text" rows="3" placeholder="任意入力" style="width:100%; box-sizing:border-box; border-radius:10px; border:none; padding:10px 12px; font-family:'Noto Sans JP',sans-serif; font-size:14px; resize:vertical; background:rgba(255,255,255,0.9); color:#333;"></textarea>
+      <button onclick="submitSurvey()" id="survey-btn" style="margin-top:10px; padding:10px 24px; background:#fff; color:var(--green-dark); border:none; border-radius:100px; font-family:'Noto Sans JP',sans-serif; font-size:13px; font-weight:700; cursor:pointer;">送信する</button>
+      <span id="survey-done" style="display:none; margin-left:12px; font-size:13px; color:rgba(255,255,255,0.8);">✓ 送信しました</span>
+    </div>
   </div>
 </header>
 
@@ -407,6 +414,7 @@ document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel(
 // 注文完了後のリダイレクト時にバナーを表示
 if (new URLSearchParams(window.location.search).get('ordered') === '1') {
   document.getElementById('ordered-banner').style.display = 'block';
+  document.getElementById('survey-area').style.display = 'block';
 }
 
 let allOrders = [];
@@ -522,6 +530,25 @@ function renderTable() {
       <td class="ts-cell">${o.ts}</td>
     </tr>
   `).join('');
+}
+
+// アンケート送信
+function submitSurvey() {
+  const text = document.getElementById('survey-text').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('survey-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({ survey: text })
+  }).then(() => {
+    document.getElementById('survey-done').style.display = 'inline';
+    btn.style.display = 'none';
+  }).catch(() => {
+    btn.disabled = false;
+    btn.textContent = '送信する';
+  });
 }
 
 // 初回読み込み
