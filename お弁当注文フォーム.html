@@ -242,16 +242,16 @@
     font-family: 'Noto Sans JP', sans-serif;
     font-size: 13px;
     color: var(--text-dark);
-    background: var(--cream);
-    border: 2px solid rgba(26,61,43,0.10);
+    background: #eaf4ee;
+    border: 2px solid var(--green-mid);
     border-radius: 100px;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
     appearance: none;
   }
   .search-input:focus {
-    border-color: var(--green-bright);
-    box-shadow: 0 0 0 3px rgba(82,183,136,0.12);
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
   }
   .search-clear {
     display: none;
@@ -1268,6 +1268,7 @@ function handleSubmit() {
         totalCompany,
         weekLabel: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
         deliveryDates: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
+        survey: (document.getElementById('survey-text')?.value || '').trim(),
       })
     }).then(() => {
       // POST完了後にGETをプリフェッチ→確認ページ到着時にキャッシュから即表示
