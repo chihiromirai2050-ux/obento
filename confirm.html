@@ -452,7 +452,15 @@ function renderAll() {
 function getWeeks() {
   const weeks = new Set();
   allOrders.forEach(o => { if (o.weekLabel) weeks.add(o.weekLabel); });
-  return [...weeks].sort().reverse();
+  return [...weeks].sort((a, b) => {
+    // "3/17(月)・..." から最初の日付をパース
+    const parseDate = s => {
+      const m = s.match(/(\d+)\/(\d+)/);
+      if (!m) return 0;
+      return parseInt(m[1]) * 100 + parseInt(m[2]);
+    };
+    return parseDate(b) - parseDate(a);
+  });
 }
 
 function getFilteredOrders() {
