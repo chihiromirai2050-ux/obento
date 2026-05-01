@@ -190,6 +190,8 @@ const COMPANY_MAX = 350;
 const CLOSED_DATES = [
   '2026-04-03',
   '2026-04-29',
+  '2026-05-4',
+  '2026-05-6',
 ];
 
 function calcCompany(price) { return Math.min(Math.floor(price / 2), COMPANY_MAX); }
@@ -198,7 +200,7 @@ function calcShare(price) { return price - calcCompany(price); }
 const NAMES = [
   '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','荒木',
   '若栗','加藤','岩崎','中村叶','山崎','中川','太田','原田','杉木',
-  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川',
+  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田',
 ];
 
 let nameActiveIdx = -1;
