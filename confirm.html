@@ -371,8 +371,8 @@
             <tr>
               <th>氏名</th>
               <th>月曜</th>
-              <th>水曜</th>
-              <th>金曜</th>
+              <th>火/水曜</th>
+              <th>木/金曜</th>
 
               <th>自己負担合計</th>
               <th>送信日時</th>
@@ -528,8 +528,8 @@ function renderTable() {
     <tr>
       <td class="name-cell">${o.name}</td>
       <td class="menu-cell">${menuCell(o.mon)}</td>
-      <td class="menu-cell">${menuCell(o.wed)}</td>
-      <td class="menu-cell">${menuCell(o.fri)}</td>
+      <td class="menu-cell">${menuCell(o.tue || o.wed)}</td>
+      <td class="menu-cell">${menuCell(o.thu || o.fri)}</td>
       <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
       <td class="ts-cell">${o.ts}</td>
     </tr>
