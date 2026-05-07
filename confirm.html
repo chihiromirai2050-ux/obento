@@ -375,7 +375,7 @@
               <th>金曜</th>
 
               <th>自己負担合計</th>
-              <th>送信日</th>
+              <th>送信日時</th>
             </tr>
           </thead>
           <tbody id="order-table-body">
@@ -391,16 +391,16 @@
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0ABUvGQzroalTT2j_miR_nwAA_ilsJszMdaItzGkNP-sFQ/exec';
 
-// 翌週の月水金ラベルを生成
+// 翌週の月火木ラベルを生成
 function getNextWeekLabel() {
   const today = new Date();
   const dow = today.getDay();
   const daysToMon = dow === 0 ? 1 : (8 - dow) % 7 || 7;
   const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
-  const wed = new Date(mon); wed.setDate(mon.getDate() + 2);
-  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
+  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  return `翌週 ${fmt(mon)}(月)・${fmt(wed)}(水)・${fmt(fri)}(金)`;
+  return `翌週 ${fmt(mon)}(月)・${fmt(tue)}(火)・${fmt(thu)}(木)`;
 }
 
 document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel();
