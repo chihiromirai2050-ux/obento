@@ -907,12 +907,12 @@ function renderMenuArea() {
                   </svg>
                 </div>
                 <div class="btn-name" style="font-size:13px;">${m.name}</div>
-                <div class="btn-footer">
+                <div class="btn-footer" style="flex-direction:column;align-items:flex-start;gap:2px;">
                   <div>
-                    <span class="btn-share-label">自己負担 </span>
-                    <span class="btn-share-amount" style="color:${col};">${m.price === 0 ? '—' : '¥' + share.toLocaleString()}</span>
+                    <span class="btn-share-label">自己負担</span><br>
+                    <span class="btn-share-amount" style="color:${col}; font-size:14px;">${m.price === 0 ? '—' : '¥' + share.toLocaleString()}</span>
                   </div>
-                  <div class="btn-price-small">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
+
                 </div>
               </button>`;
             }).join('')}
