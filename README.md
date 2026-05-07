@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お弁当注文フォーム</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Serif+Display:ital@0;1&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep:   #1a3d2b;
+    --green-mid:    #2d6a4f;
+    --green-bright: #52b788;
+    --green-pale:   #d8f3dc;
+    --cream:        #faf7f2;
+    --warm-white:   #fffef9;
+    --orange-accent:#e07a2f;
+    --orange-light: #fdf0e3;
+    --text-dark:    #1c1c1c;
+    --text-mid:     #4a4a4a;
+    --text-light:   #8a8a8a;
+    --shadow-card:  0 4px 24px rgba(26,61,43,0.10), 0 1px 4px rgba(26,61,43,0.06);
+    --shadow-hover: 0 12px 40px rgba(26,61,43,0.18), 0 2px 8px rgba(26,61,43,0.10);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--cream);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--green-deep);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(82,183,136,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 10%;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(82,183,136,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 36px 20px 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(82,183,136,0.18);
+    border: 1px solid rgba(82,183,136,0.35);
+    color: var(--green-bright);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .header-title em { font-style: italic; color: var(--green-bright); }
+  .header-sub {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .header-meta {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.75);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .header-meta-item .icon {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .deadline-chip {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--orange-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 100px;
+    box-shadow: 0 4px 16px rgba(224,122,47,0.4);
+  }
+
+  /* ── MAIN ── */
+  .main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 32px 16px 80px;
+  }
+
+  /* NAME SECTION */
+  .name-section {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+    position: relative;
+    z-index: 200;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 10px;
+  }
+  .name-select-wrap { position: relative; }
+  .name-input {
+    width: 100%;
+    padding: 14px 44px 14px 18px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dark);
+    background: var(--cream);
+    border: 2px solid rgba(26,61,43,0.12);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .name-input:focus {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 0 4px rgba(82,183,136,0.15);
+  }
+  .name-input.error-field { border-color: #e05252; }
+  .name-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: #fff;
+    border: 2px solid var(--green-bright);
+    border-radius: 12px;
+    box-shadow: var(--shadow-hover);
+    z-index: 100;
+    overflow: hidden;
+    display: none;
+  }
+  .name-suggestions.active { display: block; }
+  .name-suggestion-item {
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: background 0.12s;
+    border-bottom: 1px solid rgba(26,61,43,0.05);
+  }
+  .name-suggestion-item:last-child { border-bottom: none; }
+  .name-suggestion-item:hover,
+  .name-suggestion-item.active-item {
+    background: var(--green-pale);
+    color: var(--green-deep);
+  }
+  .name-suggestion-item mark {
+    background: none;
+    color: var(--green-mid);
+    font-weight: 900;
+  }
+
+  /* ── MENU SECTION ── */
+  .menu-section {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+  }
+  .menu-section-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    max-width: 320px;
+  }
+  .search-wrap .search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 36px 10px 36px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: #eaf4ee;
+    border: 2px solid var(--green-mid);
+    border-radius: 100px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+  .search-input:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
+  }
+  .search-clear {
+    display: none;
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-light); font-size: 15px;
+    cursor: pointer; padding: 4px;
+    line-height: 1;
+  }
+
+  /* SERIES */
+  .series-block { margin-bottom: 4px; }
+  .series-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 0 6px;
+    margin: 0;
+    border-bottom: 2px solid var(--series-border);
+    margin-bottom: 8px;
+  }
+  .series-name {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--text-dark);
+  }
+
+  /* MENU BUTTONS */
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .menu-btn {
+    position: relative;
+    background: var(--btn-bg, var(--cream));
+    border: 2px solid var(--btn-border, rgba(26,61,43,0.08));
+    border-radius: 12px;
+    padding: 12px 12px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.18s cubic-bezier(.34,1.4,.64,1), box-shadow 0.18s, border-color 0.15s, background 0.15s;
+    -webkit-user-select: none; user-select: none;
+    outline: none;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .menu-btn:active { transform: scale(0.97); }
+  .menu-btn:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  .menu-btn.selected {
+    border-color: var(--green-bright);
+    background: var(--green-pale);
+    box-shadow: var(--shadow-hover), 0 0 0 3px rgba(82,183,136,0.18);
+    transform: translateY(-2px);
+  }
+  .menu-btn.dimmed { opacity: 0.32; pointer-events: none; }
+
+  .btn-check {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px;
+    background: var(--green-bright);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0.4);
+    transition: opacity 0.18s, transform 0.22s cubic-bezier(.34,1.4,.64,1);
+    box-shadow: 0 2px 8px rgba(82,183,136,0.4);
+  }
+  .btn-check svg { width: 11px; height: 11px; }
+  .menu-btn.selected .btn-check { opacity: 1; transform: scale(1); }
+
+  .btn-name {
+    font-size: 15px;
+    font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1.35;
+    margin-bottom: 8px;
+    padding-right: 24px;
+  }
+  .btn-footer {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .btn-share-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-light);
+  }
+  .btn-share-amount {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--green-mid);
+  }
+  .btn-price-small {
+    font-size: 10px;
+    color: var(--text-light);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* SEARCH EMPTY */
+  .search-empty {
+    display: none;
+    text-align: center;
+    padding: 20px 0 8px;
+    font-size: 13px;
+    color: var(--text-light);
+  }
+
+  /* ── DAY SECTION ── */
+  .day-section {
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease both;
+  }
+  .day-section:nth-child(1) { animation-delay: 0.05s; }
+  .day-section:nth-child(2) { animation-delay: 0.12s; }
+  .day-section:nth-child(3) { animation-delay: 0.19s; }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .day-pill {
+    background: var(--green-deep);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 18px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .day-date {
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  .day-selected-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-mid);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .day-selected-name.empty { color: var(--text-light); font-weight: 400; font-style: italic; }
+  .day-skip {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-light);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .day-skip input { accent-color: var(--green-mid); cursor: pointer; }
+
+  /* SKIP CARD */
+  .day-skip-card {
+    background: var(--cream);
+    border: 2px dashed rgba(26,61,43,0.12);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 13px;
+    display: none;
+  }
+  .day-skip-card.active { display: block; }
+  .day-closed-card {
+    background: #f5f5f5;
+    border: 2px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: center;
+    color: var(--text-light);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* SELECTED SUMMARY CARD */
+  .day-summary-card {
+    background: var(--warm-white);
+    border: 2px solid var(--green-bright);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-shadow: 0 2px 12px rgba(82,183,136,0.12);
+  }
+  .day-summary-card.active {
+    display: flex;
+  }
+  .day-summary-menu { font-size: 13px; font-weight: 700; color: var(--text-dark); flex: 1; }
+  .day-summary-right { text-align: right; flex-shrink: 0; }
+  .day-summary-share { font-size: 14px; font-weight: 900; color: var(--orange-accent); }
+  .day-summary-price { font-size: 10px; color: var(--text-light); }
+  .day-summary-clear {
+    background: none; border: none;
+    color: var(--text-light); font-size: 18px;
+    cursor: pointer; padding: 2px 4px; line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .day-summary-clear:hover { color: #e05252; }
+
+  /* SUMMARY BAR */
+  .summary-bar {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(26,61,43,0.06);
+  }
+  .summary-rows {}
+  .summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(26,61,43,0.06);
+    font-size: 14px;
+    gap: 12px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row-day { font-weight: 700; color: var(--green-mid); min-width: 48px; }
+  .summary-row-menu { flex: 1; color: var(--text-dark); font-size: 13px; }
+  .summary-row-price { font-weight: 700; color: var(--text-dark); white-space: nowrap; font-size: 13px; }
+  .summary-row-none { color: var(--text-light); font-style: italic; flex: 1; font-size: 13px; }
+  .summary-total {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: var(--green-pale);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .summary-total-label { font-size: 13px; font-weight: 700; color: var(--green-deep); }
+  .summary-total-amount { font-size: 22px; font-weight: 900; color: var(--green-deep); }
+  .summary-total-amount small {
+    font-size: 11px; font-weight: 500;
+    color: var(--green-mid); margin-left: 4px;
+  }
+
+  /* SUBMIT */
+  .submit-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--green-deep);
+    color: #fff;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 24px rgba(26,61,43,0.3);
+  }
+  .submit-btn:hover {
+    background: var(--green-mid);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(26,61,43,0.4);
+  }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn-inner {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+
+  /* ERROR */
+  .error-msg {
+    color: #e05252;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .success-screen.visible { display: block; }
+  .success-icon {
+    font-size: 72px;
+    margin-bottom: 20px;
+    animation: pop 0.5s cubic-bezier(.34,1.4,.64,1);
+  }
+  @keyframes pop {
+    from { transform: scale(0.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .success-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--green-deep);
+    margin-bottom: 10px;
+  }
+  .success-sub { color: var(--text-light); font-size: 14px; line-height: 1.7; }
+  .success-detail {
+    margin-top: 24px;
+    background: var(--green-pale);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: left;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .success-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(26,61,43,0.08);
+    gap: 12px;
+  }
+  .success-detail-row:last-child { border-bottom: none; }
+  .success-detail-key { color: var(--green-mid); font-weight: 700; flex-shrink: 0; }
+  .reset-btn {
+    margin-top: 24px;
+    padding: 12px 32px;
+    background: transparent;
+    border: 2px solid var(--green-mid);
+    color: var(--green-mid);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { background: var(--green-mid); color: #fff; }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.4s ease both; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-badge">Weekly Bento Order</div>
+    <h1 class="header-title">お弁当<em>注文</em>フォーム</h1>
+    <p class="header-sub">食べたいお弁当を選んで注文してください。<br>会社が半額を負担します。</p>
+    <div class="header-meta">
+      <div class="header-meta-item">
+        <div class="icon">📅</div>
+        <span id="target-week">翌週 月・火・木</span>
+      </div>
+      <div class="header-meta-item">
+        <div class="icon">💴</div>
+        <span>会社負担 半額</span>
+      </div>
+    </div>
+    <div class="deadline-chip">⏰ 締め切り：今週木曜 13:00</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main" id="form-area">
+
+  <!-- 氏名 -->
+  <div class="name-section fade-in">
+    <div class="section-label">お名前 *</div>
+    <div class="name-select-wrap">
+      <input type="text" class="name-input" id="name-select"
+        placeholder="名前を入力または選択…"
+        autocomplete="off"
+        oninput="nameInput(this.value)"
+        onfocus="nameInput(this.value)"
+        onblur="setTimeout(()=>closeSuggestions(),150)"
+        onkeydown="nameKeydown(event)">
+      <div class="name-suggestions" id="name-suggestions"></div>
+    </div>
+    <div class="error-msg" id="name-error">名前を選択してください</div>
+  </div>
+
+  <!-- メニュー選択 -->
+  <div class="menu-section fade-in">
+    <div class="menu-section-top">
+      <div class="section-label" style="margin-bottom:0">メニューを選ぶ</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="menu-search"
+          placeholder="メニューを検索…"
+          oninput="filterMenus(this.value)"
+          onfocus="this.style.borderColor='var(--green-bright)'"
+          onblur="this.style.borderColor=''">
+        <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+      </div>
+    </div>
+    <div id="menu-area"></div>
+    <div class="search-empty" id="search-empty">該当するメニューが見つかりません</div>
+  </div>
+
+  <!-- 曜日ごとの確認 -->
+  <div id="days-container"></div>
+
+  <!-- サマリー -->
+  <div class="summary-bar fade-in">
+    <div class="section-label">注文サマリー</div>
+    <div class="summary-rows" id="summary-rows"></div>
+    <div class="summary-total">
+      <div class="summary-total-label">今週の自己負担合計</div>
+      <div class="summary-total-amount" id="total-display">¥0<small>/ 今週</small></div>
+    </div>
+  </div>
+
+  <!-- 送信 -->
+  <div class="error-msg" id="order-error" style="margin-bottom:12px;font-size:13px;">少なくとも1日分を注文してください</div>
+  <!-- ご意見・ご要望 -->
+  <div style="margin-top:32px; background:#fff; border-radius:18px; padding:20px; box-shadow:0 2px 12px rgba(26,61,43,0.07);">
+    <div style="font-size:13px; font-weight:700; color:var(--green-dark); margin-bottom:4px;">ご意見・ご要望</div>
+    <div style="font-size:12px; color:var(--text-light); margin-bottom:10px;">お弁当についてご意見、ご要望があれば記入してください。</div>
+    <textarea id="survey-text" rows="3" placeholder="任意入力" style="width:100%; box-sizing:border-box; border-radius:10px; border:1.5px solid rgba(26,61,43,0.12); padding:10px 12px; font-family:'Noto Sans JP',sans-serif; font-size:14px; resize:vertical; color:var(--text-dark); background:#fafaf8;"></textarea>
+    <button onclick="submitSurvey()" id="survey-btn" style="margin-top:10px; padding:10px 28px; background:var(--green-dark); color:#fff; border:none; border-radius:100px; font-family:'Noto Sans JP',sans-serif; font-size:13px; font-weight:700; cursor:pointer;">送信する</button>
+    <span id="survey-done" style="display:none; margin-left:12px; font-size:13px; color:var(--green-mid);">✓ 送信しました</span>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="handleSubmit()" style="margin-top:24px;">
+    <div class="submit-btn-inner">
+      <span>注文を確定する</span>
+      <span style="font-size:18px">→</span>
+    </div>
+  </button>
+</main>
+
+<!-- SUCCESS -->
+<div class="main success-screen" id="success-screen">
+  <div class="success-icon">🎉</div>
+  <h2 class="success-title">注文完了！</h2>
+  <p class="success-sub">ご注文を受け付けました。<br>変更・キャンセルは担当者までご連絡ください。</p>
+  <div class="success-detail" id="success-detail"></div>
+  <a href="confirm.html" style="display:inline-block;margin-top:16px;padding:14px 36px;background:var(--orange-accent);color:#fff;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:100px;text-decoration:none;text-align:center;box-shadow:0 4px 16px rgba(224,122,47,0.4);letter-spacing:0.05em;">📋 注文を確認する →</a>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0ABUvGQzroalTT2j_miR_nwAA_ilsJszMdaItzGkNP-sFQ/exec';
+const COMPANY_MAX = Infinity;
+
+// ─────────────────────────────────────────────────────
+// ✏️ 提供なし日の設定（休業日・祝日など）
+// 選択不可にしたい日付を 'YYYY-MM-DD' 形式で追加してください
+const CLOSED_DATES = [
+  '2026-04-03',
+  // '2025-05-01',
+  // '2025-12-31',
+];
+// ─────────────────────────────────────────────────────
+
+function calcCompany(price) {
+  return Math.min(Math.floor(price / 2), COMPANY_MAX);
+}
+function calcShare(price) {
+  return price - calcCompany(price);
+}
+
+// ── 名前リスト ──────────────────────────
+const NAMES = [
+  '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','みちる','荒木',
+  '若栗','加藤','岩崎','中村叶','山崎','髙梨','中川','太田','原田','杉木',
+  '矢部','野尻','森山','久保','古滝','若菜','ちひろ','淺見','飛彩',
+];
+
+let nameActiveIdx = -1;
+
+function nameInput(val) {
+  const q = val.trim();
+  const filtered = q ? NAMES.filter(n => n.includes(q)) : NAMES;
+  showSuggestions(filtered, q);
+  nameActiveIdx = -1;
+}
+
+function showSuggestions(list, q) {
+  const box = document.getElementById('name-suggestions');
+  if (!list.length) { box.classList.remove('active'); return; }
+  box.innerHTML = list.map((n, i) => {
+    const highlighted = q ? n.replace(new RegExp(q, 'g'), `<mark>${q}</mark>`) : n;
+    return `<div class="name-suggestion-item" data-name="${n}" onmousedown="selectName('${n}')">${highlighted}</div>`;
+  }).join('');
+  box.classList.add('active');
+}
+
+function selectName(name) {
+  const input = document.getElementById("name-select");
+  input.value = name;
+  closeSuggestions();
+  input.classList.remove("error-field");
+  document.getElementById("name-error").classList.remove("visible");
+  // 名前確定後、全曜日が揃っていれば送信ボタンへ
+  const allDoneOnName = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (allDoneOnName) {
+    setTimeout(() => {
+      document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+  }
+}
+
+function closeSuggestions() {
+  document.getElementById('name-suggestions').classList.remove('active');
+  nameActiveIdx = -1;
+}
+
+function nameKeydown(e) {
+  const box = document.getElementById('name-suggestions');
+  const items = box.querySelectorAll('.name-suggestion-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    nameActiveIdx = Math.min(nameActiveIdx + 1, items.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    nameActiveIdx = Math.max(nameActiveIdx - 1, 0);
+  } else if (e.key === 'Enter' && nameActiveIdx >= 0) {
+    e.preventDefault();
+    selectName(items[nameActiveIdx].dataset.name);
+    return;
+  } else if (e.key === 'Escape') {
+    closeSuggestions(); return;
+  } else { return; }
+  items.forEach((el, i) => el.classList.toggle('active-item', i === nameActiveIdx));
+  items[nameActiveIdx]?.scrollIntoView({ block: 'nearest' });
+}
+
+// ── シリーズ・メニューデータ ──────────────────────
+const SERIES = [
+  { key: 's-bentoya2', label: 'メニュー', color: '#2e7d32', bg: '#f4f9f6', border: 'rgba(46,125,50,0.14)',
+    okazu: [
+      { name: 'しゃけ', items: [
+        { id:'B01', name:'白ごはん',     price: 600 },
+        { id:'B02', name:'白ごはん大盛', price: 600 },
+        { id:'B03', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'からあげ', items: [
+        { id:'B04', name:'白ごはん',     price: 600 },
+        { id:'B05', name:'白ごはん大盛', price: 600 },
+        { id:'B06', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'トンカツ', items: [
+        { id:'B07', name:'白ごはん',     price: 600 },
+        { id:'B08', name:'白ごはん大盛', price: 600 },
+        { id:'B09', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'ささみはんぺん（フライ）', items: [
+        { id:'B10', name:'白ごはん',     price: 600 },
+        { id:'B11', name:'白ごはん大盛', price: 600 },
+        { id:'B12', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'チキンカツタルタル', items: [
+        { id:'B13', name:'白ごはん',     price: 600 },
+        { id:'B14', name:'白ごはん大盛', price: 600 },
+        { id:'B15', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'ハンバーグ', items: [
+        { id:'B16', name:'白ごはん',     price: 600 },
+        { id:'B17', name:'白ごはん大盛', price: 600 },
+        { id:'B18', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: '日替わり弁当', items: [], comingSoon: true },
+    ],
+    get items() { return this.okazu.flatMap(o => o.items.map(i => ({ ...i, okazuName: o.name }))); }
+  },
+];
+
+const ALL_MENUS = SERIES.flatMap(s => s.items.map(m => ({ ...m, seriesKey: s.key, color: s.color })));
+
+const DAYS = ['月', '火', '木'];
+function getNextWeekDates() {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysToMon = (dow === 0) ? 1 : (8 - dow) % 7 || 7;
+  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
+  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
+  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
+  const fmt    = d => `${d.getMonth()+1}/${d.getDate()}`;
+  const fmtISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return {
+    labels: [fmt(mon), fmt(tue), fmt(thu)],
+    isos:   [fmtISO(mon), fmtISO(tue), fmtISO(thu)],
+  };
+}
+const { labels: dates, isos: dateISOs } = getNextWeekDates();
+
+// 休業日チェック（CLOSED_DATESに含まれる曜日はロック）
+const closedDays = { 月: false, 火: false, 木: false };
+DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
+
+const selections = { 月: [], 火: [], 木: [] };
+const skipped    = { 月: false, 水: false, 金: false };
+
+// ── メニューエリア描画 ──────────────────────────
+function renderMenuArea() {
+  const OKAZU_COLORS = ['#e8a099','#e8b899','#e8cc99','#dda899','#e8a0ad','#dda899','#e8bc99'];
+  const area = document.getElementById('menu-area');
+  area.innerHTML = SERIES.map(s => `
+    <div class="series-block" data-series="${s.key}">
+      ${s.okazu.map((o, oi) => {
+        const col = OKAZU_COLORS[oi % OKAZU_COLORS.length];
+        return `
+        <div style="margin-bottom:18px;">
+          <div style="display:inline-block; background:${col}; padding:5px 18px 5px 14px;
+            border-radius:6px; margin-bottom:10px;">
+            <span style="font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:800; color:#fff; letter-spacing:0.03em;">
+              ${o.name}
+            </span>
+          </div>
+          ${o.comingSoon ? `
+            <div style="padding:10px 14px; background:#f5f5f5; border-radius:10px; color:#aaa; font-size:13px; font-weight:700; letter-spacing:0.05em;">🔧 準備中</div>
+          ` : `<div style="display:flex; gap:8px; padding:0 4px;">
+            ${o.items.map(m => {
+              const share = calcShare(m.price);
+              return `
+              <button class="menu-btn" id="mbtn-${m.id}" onclick="tapMenu('${m.id}')"
+                style="background:#fafaf8; border-color:${col}40; flex:1; min-width:0;">
+                <div class="btn-check" style="background:${col};">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="btn-name" style="font-size:13px;">${m.name}</div>
+                <div class="btn-footer">
+                  <div>
+                    <span class="btn-share-label">自己負担 </span>
+                    <span class="btn-share-amount" style="color:${col};">${m.price === 0 ? '—' : '¥' + share.toLocaleString()}</span>
+                  </div>
+                  <div class="btn-price-small">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
+                </div>
+              </button>`;
+            }).join('')}
+          </div>`}
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+// ── 曜日行描画 ──────────────────────────
+function renderDays() {
+  const container = document.getElementById('days-container');
+  container.innerHTML = DAYS.map((day, di) => {
+    const isClosed = closedDays[day];
+    const items = selections[day];
+    const hasItems = items.length > 0;
+    return `
+    <div class="day-section" id="daysec-${day}">
+      <div class="day-header">
+        <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${day}曜日</div>
+        <div class="day-date">${dates[di]}</div>
+        <div class="day-selected-name ${(!isClosed && hasItems) ? '' : 'empty'}" id="dayname-${day}">
+          ${isClosed ? '提供なし' : hasItems
+            ? items.length + '品選択中'
+            : (skipped[day] ? '— 注文なし —' : '未選択')}
+        </div>
+        ${isClosed ? '' : `
+        <label class="day-skip">
+          <input type="checkbox" id="skip-${day}" ${skipped[day] ? 'checked' : ''} onchange="toggleSkip('${day}')">
+          注文なし
+        </label>`}
+      </div>
+      ${isClosed
+        ? `<div class="day-closed-card">🔒 この日はお弁当の提供がありません</div>`
+        : `<div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
+            — 注文なし —
+           </div>
+           <div class="day-items-list" id="itemslist-${day}">
+             ${items.map((menuId, idx) => {
+               const m = ALL_MENUS.find(m => m.id === menuId);
+               const share = calcShare(m.price);
+               return `<div class="day-summary-card active" style="margin-bottom:6px">
+                 <div class="day-summary-menu">${m.okazuName ? m.okazuName + ' ' + m.name : m.name}</div>
+                 <div class="day-summary-right">
+                   <div class="day-summary-share">${m.price > 0 ? '自己負担 ¥' + share.toLocaleString() : '価格未定'}</div>
+                   <div class="day-summary-price">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
+                 </div>
+                 <button class="day-summary-clear" onclick="removeItem('${day}',${idx})">✕</button>
+               </div>`;
+             }).join('')}
+           </div>`}
+    </div>
+  `}).join('');
+}
+
+// ── タップ処理（曜日ポップアップで選択） ──────────────────────────
+let pendingMenuId = null;
+
+function tapMenu(menuId) {
+  pendingMenuId = menuId;
+  // 追加できる曜日（休業・お休みでない）を調べる
+  const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  if (available.length === 0) return;
+  if (available.length === 1) {
+    // 1曜日しかないなら直接追加
+    addToDay(available[0], menuId);
+    return;
+  }
+  showDayPicker(menuId, available);
+}
+
+function showDayPicker(menuId, available) {
+  const menu = ALL_MENUS.find(m => m.id === menuId);
+  const existing = document.getElementById('day-picker-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'day-picker-overlay';
+  overlay.style.cssText = `
+    position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000;
+    display:flex; align-items:flex-end; justify-content:center;
+  `;
+  overlay.innerHTML = `
+    <div style="background:#fff; border-radius:20px 20px 0 0; padding:24px 20px 40px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-mid);margin-bottom:6px;">追加する曜日を選択</div>
+      <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.okazuName ? menu.okazuName + ' ' + menu.name : menu.name}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${DAYS.filter(d => !closedDays[d]).map((d) => `
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <button onclick="addToDay('${d}','${menuId}')" style="
+              flex:1; padding:14px 18px; background:${available.includes(d) ? 'var(--cream)' : '#f9f9f9'};
+              border:2px solid ${available.includes(d) ? 'rgba(26,61,43,0.10)' : 'rgba(26,61,43,0.05)'};
+              border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:15px; font-weight:700;
+              color:${available.includes(d) ? 'var(--text-dark)' : 'var(--text-light)'}; cursor:pointer; text-align:left; display:flex;
+              align-items:center; justify-content:space-between;
+              ${skipped[d] ? 'opacity:0.4;pointer-events:none;' : ''}
+            ">
+              <span>${d}曜日 <span style="font-size:12px;color:var(--text-light);font-weight:400;">${dates[DAYS.indexOf(d)]}</span></span>
+              <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].length + '品選択中' : '未選択'}</span>
+            </button>
+            <button onclick="toggleSkipFromPicker('${d}')" style="
+              padding:10px 14px; background:${skipped[d] ? '#fee2e2' : 'var(--cream)'};
+              border:2px solid ${skipped[d] ? '#fca5a5' : 'rgba(26,61,43,0.10)'};
+              border-radius:12px; font-family:'Noto Sans JP',sans-serif; font-size:12px; font-weight:700;
+              color:${skipped[d] ? '#dc2626' : 'var(--text-light)'}; cursor:pointer; white-space:nowrap;
+            ">${skipped[d] ? '✕ 注文なし' : '注文なし'}</button>
+          </div>`).join('')}
+      </div>
+      <button onclick="closeDayPicker()" style="
+        margin-top:16px; width:100%; padding:14px; background:none;
+        border:2px solid rgba(26,61,43,0.12); border-radius:12px;
+        font-family:'Noto Sans JP',sans-serif; font-size:14px; font-weight:700;
+        color:var(--text-light); cursor:pointer;
+      ">キャンセル</button>
+    </div>
+  `;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeDayPicker(); });
+  document.body.appendChild(overlay);
+}
+
+function addToDay(day, menuId) {
+  // 追加前に揃っていたか記録
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  selections[day].push(menuId);
+  closeDayPicker();
+  updateAll();
+  // 揃った瞬間だけスクロール（すでに揃っていた場合はスクロールしない）
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
+}
+
+function removeItem(day, idx) {
+  selections[day].splice(idx, 1);
+  updateAll();
+}
+
+function toggleSkipFromPicker(day) {
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  skipped[day] = !skipped[day];
+  if (skipped[day]) selections[day] = [];
+  // ポップアップを再描画
+  const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  showDayPicker(pendingMenuId, available);
+  updateAll();
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
+    closeDayPicker();
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
+}
+
+function closeDayPicker() {
+  const el = document.getElementById('day-picker-overlay');
+  if (el) el.remove();
+  pendingMenuId = null;
+}
+
+function clearDay(day) {
+  selections[day] = [];
+  updateAll();
+}
+
+function toggleSkip(day) {
+  const wasDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  skipped[day] = document.getElementById(`skip-${day}`).checked;
+  if (skipped[day]) selections[day] = [];
+  updateAll();
+  const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && allDone) {
+    setTimeout(() => {
+      const nameVal = document.getElementById("name-select").value.trim();
+      if (!nameVal || !NAMES.includes(nameVal)) {
+        document.getElementById("name-select").scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => document.getElementById("name-select").focus(), 400);
+      } else {
+        document.getElementById("submit-btn").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
+  }
+}
+
+function updateAll() {
+  // メニューボタン：どこかの曜日に1つ以上入っていたらselected
+  ALL_MENUS.forEach(m => {
+    const btn = document.getElementById(`mbtn-${m.id}`);
+    if (!btn) return;
+    const isSelected = DAYS.some(d => selections[d].includes(m.id));
+    btn.classList.toggle('selected', isSelected);
+  });
+
+  // 曜日行を再描画
+  renderDays();
+
+  // サマリー更新
+  let total = 0;
+  const rows = document.getElementById('summary-rows');
+  rows.innerHTML = DAYS.map((day) => {
+    const items = selections[day];
+    const isSkip = skipped[day];
+    if (items.length > 0) {
+      const dayTotal = items.reduce((sum, id) => {
+        const m = ALL_MENUS.find(m => m.id === id);
+        return sum + (m && m.price > 0 ? calcShare(m.price) : 0);
+      }, 0);
+      total += dayTotal;
+      return `<div class="summary-row" style="align-items:flex-start">
+        <span class="summary-row-day">${day}曜</span>
+        <span class="summary-row-menu">${items.map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・')}</span>
+        <span class="summary-row-price">¥${dayTotal.toLocaleString()} <span style="font-size:10px;color:var(--text-light)">（自己負担）</span></span>
+      </div>`;
+    }
+    return `<div class="summary-row">
+      <span class="summary-row-day">${day}曜</span>
+      <span class="summary-row-none">${isSkip ? '注文なし' : '未選択'}</span>
+      <span class="summary-row-price" style="color:var(--text-light)">—</span>
+    </div>`;
+  }).join('');
+  document.getElementById('total-display').innerHTML = `¥${total.toLocaleString()}<small>/ 今週</small>`;
+}
+
+// ── 検索 ──────────────────────────
+function filterMenus(query) {
+  const q = query.trim();
+  document.getElementById('search-clear').style.display = q ? 'block' : 'none';
+  let anyVisible = false;
+  SERIES.forEach(s => {
+    const block = document.querySelector(`[data-series="${s.key}"]`);
+    if (!block) return;
+    let seriesHasMatch = false;
+    s.items.forEach(m => {
+      const btn = document.getElementById(`mbtn-${m.id}`);
+      if (!btn) return;
+      const match = !q || m.name.includes(q);
+      btn.style.display = match ? '' : 'none';
+      if (match) seriesHasMatch = true;
+    });
+    block.style.display = seriesHasMatch ? '' : 'none';
+    if (seriesHasMatch) anyVisible = true;
+  });
+  document.getElementById('search-empty').style.display = anyVisible ? 'none' : 'block';
+}
+
+function clearSearch() {
+  const input = document.getElementById('menu-search');
+  input.value = '';
+  filterMenus('');
+  input.focus();
+}
+
+// ── 送信 ──────────────────────────
+function handleSubmit() {
+  let valid = true;
+  const nameEl = document.getElementById('name-select');
+  const nameErr = document.getElementById('name-error');
+  const orderErr = document.getElementById('order-error');
+
+  if (!nameEl.value || !NAMES.includes(nameEl.value.trim())) {
+    nameEl.classList.add('error-field');
+    nameErr.classList.add('visible');
+    nameErr.textContent = nameEl.value ? 'リストから名前を選択してください' : '名前を選択してください';
+    nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => nameEl.focus(), 400);
+    valid = false;
+  } else {
+    nameEl.classList.remove('error-field');
+    nameErr.classList.remove('visible');
+  }
+
+  const hasOrder = DAYS.some(d => selections[d].length > 0);
+  if (!hasOrder) {
+    orderErr.classList.add('visible');
+    valid = false;
+  } else {
+    orderErr.classList.remove('visible');
+  }
+  if (!valid) return;
+
+  let totalShare = 0;
+  DAYS.forEach(d => {
+    selections[d].forEach(id => {
+      const menu = ALL_MENUS.find(m => m.id === id);
+      if (menu && menu.price > 0) totalShare += calcShare(menu.price);
+    });
+  });
+
+  // 定価合計・会社負担合計を計算
+  let totalFull = 0;
+  DAYS.forEach(d => {
+    selections[d].forEach(id => {
+      const menu = ALL_MENUS.find(m => m.id === id);
+      if (menu && menu.price > 0) totalFull += menu.price;
+    });
+  });
+  const totalCompany = totalFull - totalShare;
+
+  if (GAS_URL !== 'YOUR_GAS_URL_HERE') {
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: nameEl.value,
+        mon: selections['月'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        tue: selections['火'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        thu: selections['木'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        totalShare,
+        totalFull,
+        totalCompany,
+        weekLabel: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
+        deliveryDates: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
+        survey: (document.getElementById('survey-text')?.value || '').trim(),
+      })
+    }).then(() => {
+      // POST完了後にGETをプリフェッチ→確認ページ到着時にキャッシュから即表示
+      fetch(GAS_URL).catch(() => {});
+    }).catch(() => {});
+  }
+
+  // 注文完了後、確認ページへリダイレクト（プリフェッチの時間を確保）
+  setTimeout(() => {
+    window.location.href = 'confirm.html?ordered=1';
+  }, 1200);
+}
+
+function submitSurvey() {
+  const text = document.getElementById('survey-text').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('survey-btn');
+  btn.disabled = true;
+  btn.textContent = '送信中…';
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify({ survey: text })
+  }).then(() => {
+    document.getElementById('survey-done').style.display = 'inline';
+    btn.style.display = 'none';
+  }).catch(() => {
+    btn.disabled = false;
+    btn.textContent = '送信する';
+  });
+}
+
+function resetForm() {
+  DAYS.forEach(d => { selections[d] = []; skipped[d] = false; });
+  document.getElementById('name-select').value = '';
+  document.getElementById('success-screen').classList.remove('visible');
+  document.getElementById('form-area').style.display = '';
+  renderMenuArea();
+  updateAll();
+}
+
+// ── Init ──────────────────────────
+renderMenuArea();
+renderDays();
+updateAll();
+document.getElementById('target-week').textContent =
+  `翌週 ${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
+</script>
+</body>
+</html>
