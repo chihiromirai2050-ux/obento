@@ -428,8 +428,11 @@ async function loadOrders(force = false) {
     const json = await res.json();
     allOrders = json.orders || [];
     // デフォルトを最新週に設定
-    const weeks = getWeeks();
-    if (weeks.length > 0) selectedWeek = weeks[0];
+    // 最新の送信日時を持つweekLabelをデフォルトに
+    if (allOrders.length > 0) {
+      const latest = allOrders[allOrders.length - 1];
+      selectedWeek = latest.weekLabel || null;
+    }
 
     renderAll();
 
