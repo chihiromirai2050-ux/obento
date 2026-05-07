@@ -630,18 +630,18 @@
   <div class="header-inner">
     <div class="header-badge">Weekly Bento Order</div>
     <h1 class="header-title">お弁当<em>注文</em>フォーム</h1>
-    <p class="header-sub">食べたいお弁当を選んで注文してください。<br>会社が半額（上限¥350）を負担します。</p>
+    <p class="header-sub">食べたいお弁当を選んで注文してください。<br>会社が半額を負担します。</p>
     <div class="header-meta">
       <div class="header-meta-item">
         <div class="icon">📅</div>
-        <span id="target-week">翌週 月・水・金</span>
+        <span id="target-week">翌週 月・火・木</span>
       </div>
       <div class="header-meta-item">
         <div class="icon">💴</div>
-        <span>会社負担 半額・上限¥350</span>
+        <span>会社負担 半額</span>
       </div>
     </div>
-    <div class="deadline-chip">⏰ 締め切り：今週金曜 13:00</div>
+    <div class="deadline-chip">⏰ 締め切り：今週木曜 13:00</div>
   </div>
 </header>
 
@@ -725,7 +725,7 @@
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0ABUvGQzroalTT2j_miR_nwAA_ilsJszMdaItzGkNP-sFQ/exec';
-const COMPANY_MAX = 350;
+const COMPANY_MAX = Infinity;
 
 // ─────────────────────────────────────────────────────
 // ✏️ 提供なし日の設定（休業日・祝日など）
@@ -746,9 +746,9 @@ function calcShare(price) {
 
 // ── 名前リスト ──────────────────────────
 const NAMES = [
-  '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','荒木',
-  '若栗','加藤','岩崎','中村叶','山崎','中川','太田','原田','杉木',
-  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田',
+  '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','みちる','荒木',
+  '若栗','加藤','岩崎','中村叶','山崎','髙梨','中川','太田','原田','杉木',
+  '矢部','野尻','森山','久保','古滝','若菜','ちひろ','淺見','飛彩',
 ];
 
 let nameActiveIdx = -1;
@@ -813,143 +813,112 @@ function nameKeydown(e) {
 
 // ── シリーズ・メニューデータ ──────────────────────
 const SERIES = [
-  { key: 's-deka',    label: 'デカからシリーズ',  color: '#c62828', bg: '#fff5f5', border: 'rgba(198,40,40,0.15)',
-    items: [
-      { id:'K01', name:'デカ2',       price: 580 },
-      { id:'K02', name:'デカ3',       price: 670 },
-      { id:'K03', name:'デカ4',       price: 820 },
-    ]
-  },
-  { key: 's-mkara',   label: '新Mからシリーズ',   color: '#1565c0', bg: '#f3f7ff', border: 'rgba(21,101,192,0.14)',
-    items: [
-      { id:'MK1', name:'のりからM',     price: 580 },
-      { id:'MK2', name:'Mから',         price: 590 },
-      { id:'MK3', name:'のりから明太M', price: 610 },
-      { id:'MK4', name:'学生M',         price: 580 },
-    ]
-  },
-  { key: 's-manpuku', label: '満腹シリーズ',       color: '#e65100', bg: '#fff8f3', border: 'rgba(230,81,0,0.14)',
-    items: [
-      { id:'M01', name:'満腹生姜焼き',               price: 740 },
-      { id:'M02', name:'チーズハンバーグ＆生姜焼き', price: 740 },
-      { id:'M03', name:'満腹かきあげ',               price: 780 },
-      { id:'M04', name:'満腹ステーキ',               price: 920 },
-    ]
-  },
-  { key: 's-deluxe',  label: 'デラックスシリーズ', color: '#b8860b', bg: '#fdfbf0', border: 'rgba(184,134,11,0.15)',
-    items: [
-      { id:'D01', name:'幕の内弁当',         price: 680 },
-      { id:'D02', name:'和風からあげDX',     price: 620 },
-      { id:'D03', name:'わいわいDX',         price: 660 },
-      { id:'D04', name:'おろしカツ＆竜田DX', price: 690 },
-    ]
-  },
-  { key: 's-itame',   label: '炎の炒めシリーズ',   color: '#2e7d32', bg: '#f4fbf4', border: 'rgba(46,125,50,0.14)',
-    items: [
-      { id:'I01', name:'肉野菜炒め',       price: 650 },
-      { id:'I02', name:'豚キャベ味噌炒め', price: 650 },
-      { id:'I03', name:'焼肉',             price: 650 },
-      { id:'I04', name:'生姜焼き',         price: 650 },
-    ]
-  },
-  { key: 's-nori',    label: 'のり弁当シリーズ',   color: '#ad1457', bg: '#fff4f8', border: 'rgba(173,20,87,0.14)',
-    items: [
-      { id:'N01', name:'得のり弁',     price: 490 },
-      { id:'N02', name:'のりから',     price: 700 },
-      { id:'N03', name:'のりから明太', price: 770 },
-      { id:'N04', name:'超のり弁',     price: 700 },
-    ]
-  },
-  { key: 's-go',      label: 'GO弁当シリーズ',     color: '#0277bd', bg: '#f2f9ff', border: 'rgba(2,119,189,0.14)',
-    items: [
-      { id:'G01', name:'のりからGO',     price: 450 },
-      { id:'G02', name:'のり弁GO',       price: 400 },
-      { id:'G03', name:'のりから白身GO', price: 490 },
-      { id:'G04', name:'エビフライGO',   price: 470 },
-    ]
-  },
-  { key: 's-sake',    label: '銀鮭シリーズ',       color: '#558b2f', bg: '#f5fbf0', border: 'rgba(85,139,47,0.14)',
-    items: [
-      { id:'S01', name:'銀鮭＆生姜焼き', price: 650 },
-      { id:'S02', name:'銀鮭＆和風唐揚', price: 620 },
-      { id:'S03', name:'銀鮭満腹',       price: 680 },
-    ]
-  },
-  { key: 's-other',   label: 'その他',             color: '#546e7a', bg: '#f5f7f8', border: 'rgba(84,110,122,0.14)',
-    items: [
-      { id:'O02', name:'チキン南蛮',             price: 700 },
-      { id:'O01', name:'塩さば弁当',             price: 650 },
-      { id:'O05', name:'たっぷりチーズハンバーグ', price: 640 },
-      { id:'O03', name:'カツカレー',             price: 640 },
-      { id:'O04', name:'カレー',                 price: 450 },
-      { id:'O12', name:'味噌チャオ',               price: 690 },
-      { id:'O06', name:'焼き肉1.5',              price: 780 },
-      { id:'O07', name:'チャオ',                 price: 780 },
-      { id:'O08', name:'海苔のみそ汁',             price: 160 },
-      { id:'O09', name:'とん汁',                   price: 160 },
-      { id:'O10', name:'あさり',                   price: 160 },
-      { id:'O13', name:'ごはん大盛',               price:  50 },
-      { id:'O14', name:'ごはん特盛',               price: 100 },
-    ]
+  { key: 's-bentoya2', label: 'メニュー', color: '#2e7d32', bg: '#f4f9f6', border: 'rgba(46,125,50,0.14)',
+    okazu: [
+      { name: 'しゃけ', items: [
+        { id:'B01', name:'白ごはん',     price: 600 },
+        { id:'B02', name:'白ごはん大盛', price: 600 },
+        { id:'B03', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'からあげ', items: [
+        { id:'B04', name:'白ごはん',     price: 600 },
+        { id:'B05', name:'白ごはん大盛', price: 600 },
+        { id:'B06', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'トンカツ', items: [
+        { id:'B07', name:'白ごはん',     price: 600 },
+        { id:'B08', name:'白ごはん大盛', price: 600 },
+        { id:'B09', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'ささみはんぺん（フライ）', items: [
+        { id:'B10', name:'白ごはん',     price: 600 },
+        { id:'B11', name:'白ごはん大盛', price: 600 },
+        { id:'B12', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'チキンカツタルタル', items: [
+        { id:'B13', name:'白ごはん',     price: 600 },
+        { id:'B14', name:'白ごはん大盛', price: 600 },
+        { id:'B15', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: 'ハンバーグ', items: [
+        { id:'B16', name:'白ごはん',     price: 600 },
+        { id:'B17', name:'白ごはん大盛', price: 600 },
+        { id:'B18', name:'混ぜご飯',     price: 650 },
+      ]},
+      { name: '日替わり弁当', items: [], comingSoon: true },
+    ],
+    get items() { return this.okazu.flatMap(o => o.items.map(i => ({ ...i, okazuName: o.name }))); }
   },
 ];
 
 const ALL_MENUS = SERIES.flatMap(s => s.items.map(m => ({ ...m, seriesKey: s.key, color: s.color })));
 
-const DAYS = ['月', '水', '金'];
+const DAYS = ['月', '火', '木'];
 function getNextWeekDates() {
   const today = new Date();
   const dow = today.getDay();
   const daysToMon = (dow === 0) ? 1 : (8 - dow) % 7 || 7;
   const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
-  const wed = new Date(mon); wed.setDate(mon.getDate() + 2);
-  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
+  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
   const fmt    = d => `${d.getMonth()+1}/${d.getDate()}`;
   const fmtISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return {
-    labels: [fmt(mon), fmt(wed), fmt(fri)],
-    isos:   [fmtISO(mon), fmtISO(wed), fmtISO(fri)],
+    labels: [fmt(mon), fmt(tue), fmt(thu)],
+    isos:   [fmtISO(mon), fmtISO(tue), fmtISO(thu)],
   };
 }
 const { labels: dates, isos: dateISOs } = getNextWeekDates();
 
 // 休業日チェック（CLOSED_DATESに含まれる曜日はロック）
-const closedDays = { 月: false, 水: false, 金: false };
+const closedDays = { 月: false, 火: false, 木: false };
 DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
 
-const selections = { 月: [], 水: [], 金: [] };
+const selections = { 月: [], 火: [], 木: [] };
 const skipped    = { 月: false, 水: false, 金: false };
 
 // ── メニューエリア描画 ──────────────────────────
 function renderMenuArea() {
+  const OKAZU_COLORS = ['#e8a099','#e8b899','#e8cc99','#dda899','#e8a0ad','#dda899','#e8bc99'];
   const area = document.getElementById('menu-area');
   area.innerHTML = SERIES.map(s => `
     <div class="series-block" data-series="${s.key}">
-      <div class="series-label-row" style="--series-border:${s.color}; border-bottom-color:${s.color};">
-        <span class="series-name">${s.label}</span>
-      </div>
-      <div class="menu-grid">
-        ${s.items.map(m => {
-          const share = calcShare(m.price);
-          return `
-          <button class="menu-btn" id="mbtn-${m.id}" onclick="tapMenu('${m.id}')"
-            style="background:#fff; border-color:${s.border};">
-            <div class="btn-check">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <div class="btn-name">${m.name}</div>
-            <div class="btn-footer">
-              <div>
-                <span class="btn-share-label">自己負担 </span>
-                <span class="btn-share-amount">${m.price === 0 ? '—' : '¥' + share.toLocaleString()}</span>
-              </div>
-              <div class="btn-price-small">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
-            </div>
-          </button>`;
-        }).join('')}
-      </div>
+      ${s.okazu.map((o, oi) => {
+        const col = OKAZU_COLORS[oi % OKAZU_COLORS.length];
+        return `
+        <div style="margin-bottom:18px;">
+          <div style="display:inline-block; background:${col}; padding:5px 18px 5px 14px;
+            border-radius:6px; margin-bottom:10px;">
+            <span style="font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:800; color:#fff; letter-spacing:0.03em;">
+              ${o.name}
+            </span>
+          </div>
+          ${o.comingSoon ? `
+            <div style="padding:10px 14px; background:#f5f5f5; border-radius:10px; color:#aaa; font-size:13px; font-weight:700; letter-spacing:0.05em;">🔧 準備中</div>
+          ` : `<div style="display:flex; gap:8px; padding:0 4px;">
+            ${o.items.map(m => {
+              const share = calcShare(m.price);
+              return `
+              <button class="menu-btn" id="mbtn-${m.id}" onclick="tapMenu('${m.id}')"
+                style="background:#fafaf8; border-color:${col}40; flex:1; min-width:0;">
+                <div class="btn-check" style="background:${col};">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="btn-name" style="font-size:13px;">${m.name}</div>
+                <div class="btn-footer" style="flex-direction:column;align-items:flex-start;gap:2px;">
+                  <div>
+                    <span class="btn-share-label">自己負担</span><br>
+                    <span class="btn-share-amount" style="color:${col}; font-size:14px;">${m.price === 0 ? '—' : '¥' + share.toLocaleString()}</span>
+                  </div>
+
+                </div>
+              </button>`;
+            }).join('')}
+          </div>`}
+        </div>`;
+      }).join('')}
     </div>
   `).join('');
 }
@@ -987,7 +956,7 @@ function renderDays() {
                const m = ALL_MENUS.find(m => m.id === menuId);
                const share = calcShare(m.price);
                return `<div class="day-summary-card active" style="margin-bottom:6px">
-                 <div class="day-summary-menu">${m.name}</div>
+                 <div class="day-summary-menu">${m.okazuName ? m.okazuName + ' ' + m.name : m.name}</div>
                  <div class="day-summary-right">
                    <div class="day-summary-share">${m.price > 0 ? '自己負担 ¥' + share.toLocaleString() : '価格未定'}</div>
                    <div class="day-summary-price">${m.price > 0 ? '定価 ¥' + m.price.toLocaleString() : ''}</div>
@@ -1030,7 +999,7 @@ function showDayPicker(menuId, available) {
   overlay.innerHTML = `
     <div style="background:#fff; border-radius:20px 20px 0 0; padding:24px 20px 40px; width:100%; max-width:480px; box-shadow:0 -8px 32px rgba(0,0,0,0.15);">
       <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-mid);margin-bottom:6px;">追加する曜日を選択</div>
-      <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.name}</div>
+      <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.okazuName ? menu.okazuName + ' ' + menu.name : menu.name}</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         ${DAYS.filter(d => !closedDays[d]).map((d) => `
           <div style="display:flex;gap:8px;align-items:stretch;">
@@ -1170,7 +1139,7 @@ function updateAll() {
       total += dayTotal;
       return `<div class="summary-row" style="align-items:flex-start">
         <span class="summary-row-day">${day}曜</span>
-        <span class="summary-row-menu">${items.map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・')}</span>
+        <span class="summary-row-menu">${items.map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・')}</span>
         <span class="summary-row-price">¥${dayTotal.toLocaleString()} <span style="font-size:10px;color:var(--text-light)">（自己負担）</span></span>
       </div>`;
     }
@@ -1263,14 +1232,14 @@ function handleSubmit() {
       method: 'POST',
       body: JSON.stringify({
         name: nameEl.value,
-        mon: selections['月'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
-        wed: selections['水'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
-        fri: selections['金'].map(id => ALL_MENUS.find(m => m.id === id)?.name).join('・'),
+        mon: selections['月'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        tue: selections['火'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        thu: selections['木'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
         totalShare,
         totalFull,
         totalCompany,
-        weekLabel: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
-        deliveryDates: `${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`,
+        weekLabel: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
+        deliveryDates: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
         survey: (document.getElementById('survey-text')?.value || '').trim(),
       })
     }).then(() => {
@@ -1317,7 +1286,7 @@ renderMenuArea();
 renderDays();
 updateAll();
 document.getElementById('target-week').textContent =
-  `翌週 ${dates[0]}(月)・${dates[1]}(水)・${dates[2]}(金)`;
+  `翌週 ${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
 </script>
 </body>
 </html>
