@@ -840,7 +840,7 @@ const SERIES = [
         { id:'B14', name:'白ごはん大盛', price: 600 },
         { id:'B15', name:'混ぜご飯',     price: 650 },
       ]},
-      { name: 'ハンバーグ', items: [
+      { name: 'ハンバーグ', note: '※日によって味が違います（煮込み・和風・チーズ・豆腐）', items: [
         { id:'B16', name:'白ごはん',     price: 600 },
         { id:'B17', name:'白ごはん大盛', price: 600 },
         { id:'B18', name:'混ぜご飯',     price: 650 },
@@ -891,11 +891,13 @@ function renderMenuArea() {
         const col = OKAZU_COLORS[oi % OKAZU_COLORS.length];
         return `
         <div style="margin-bottom:18px;">
-          <div style="display:inline-block; background:${col}; padding:5px 18px 5px 14px;
-            border-radius:6px; margin-bottom:10px;">
-            <span style="font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:800; color:#fff; letter-spacing:0.03em;">
-              ${o.name}
-            </span>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+            <div style="display:inline-block; background:${col}; padding:5px 18px 5px 14px; border-radius:6px;">
+              <span style="font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:800; color:#fff; letter-spacing:0.03em;">
+                ${o.name}
+              </span>
+            </div>
+            ${o.note ? `<span style="font-size:11px; color:var(--text-dark); font-weight:500;">${o.note}</span>` : ''}
           </div>
           ${o.comingSoon ? `
             <div style="padding:10px 14px; background:#f5f5f5; border-radius:10px; color:#aaa; font-size:13px; font-weight:700; letter-spacing:0.05em;">🔧 準備中</div>
