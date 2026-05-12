@@ -835,7 +835,7 @@ const SERIES = [
         { id:'B14', name:'白ごはん大盛', price: 600 },
         { id:'B15', name:'混ぜご飯',     price: 650 },
       ]},
-      { name: 'ハンバーグ', note: '※⚠️日によってハンバーグの味が異なります（煮込み・和風・チーズ・豆腐）', items: [
+      { name: 'ハンバーグ', note: '⚠️日によって味が違います（煮込み・和風・チーズ・豆腐）', items: [
         { id:'B16', name:'白ごはん',     price: 600 },
         { id:'B17', name:'白ごはん大盛', price: 600 },
         { id:'B18', name:'混ぜご飯',     price: 650 },
@@ -1013,7 +1013,7 @@ function showDayPicker(menuId, available) {
               ${skipped[d] ? 'opacity:0.4;pointer-events:none;' : ''}
             ">
               <span>${d}曜日 <span style="font-size:12px;color:var(--text-light);font-weight:400;">${dates[DAYS.indexOf(d)]}</span></span>
-              <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].length + '品選択中' : '未選択'}</span>
+              <span style="font-size:12px;color:var(--green-mid);">${selections[d].length > 0 ? selections[d].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・') : '未選択'}</span>
             </button>
             <button onclick="toggleSkipFromPicker('${d}')" style="
               padding:10px 14px; background:${skipped[d] ? '#fee2e2' : 'var(--cream)'};
