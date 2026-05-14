@@ -634,7 +634,7 @@
     <div class="header-meta">
       <div class="header-meta-item">
         <div class="icon">📅</div>
-        <span id="target-week">翌々週 月・火・木</span>
+        <span id="target-week">月・火・木</span>
       </div>
       <div class="header-meta-item">
         <div class="icon">💴</div>
@@ -748,7 +748,7 @@ function calcShare(price) {
 const NAMES = [
   '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','みちる','荒木',
   '若栗','加藤','岩崎','中村叶','山崎','髙梨','中川','太田','原田','杉木',
-  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','笹川','嶋田',
+  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田',
 ];
 
 let nameActiveIdx = -1;
@@ -856,10 +856,20 @@ const ALL_MENUS = SERIES.flatMap(s => s.items.map(m => ({ ...m, seriesKey: s.key
 const DAYS = ['月', '火', '木'];
 function getNextWeekDates() {
   const today = new Date();
-  const dow = today.getDay();
-  // 翌々週の月曜を計算
+  const dow = today.getDay(); // 0=日,1=月,...,3=水,...
+  // 今週の水曜の日付を計算（今日が何曜日でも今週の水曜を求める）
+  const startOfWeek = new Date(today); // 今週日曜
+  startOfWeek.setDate(today.getDate() - dow);
+  const thisWed = new Date(startOfWeek);
+  thisWed.setDate(startOfWeek.getDate() + 3);
+  thisWed.setHours(23, 59, 59, 999);
+  // 今週水曜23:59を過ぎていたら翌々週、そうでなければ翌週
+  const weeksAhead = today > thisWed ? 2 : 1;
+  // 締め切り表示：翌週か翌々週かに応じた水曜
+  const wedDeadline = new Date(thisWed);
+  if (weeksAhead === 2) wedDeadline.setDate(thisWed.getDate() + 7);
   const daysToMon = (dow === 0) ? 1 : (8 - dow) % 7 || 7;
-  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + 7);
+  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + (weeksAhead - 1) * 7);
   const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
   const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
   const fmt    = d => `${d.getMonth()+1}/${d.getDate()}`;
@@ -1297,18 +1307,24 @@ function resetForm() {
 renderMenuArea();
 renderDays();
 updateAll();
-// 来週水曜の日付を計算して締め切りに表示
+// 締め切り日を表示（wedDeadlineはgetNextWeekDates内で計算済みの日付を利用）
 (function() {
   const today = new Date();
   const dow = today.getDay();
-  const daysToNextWed = (dow === 0) ? 3 : (dow <= 3) ? (3 - dow + 7) : (10 - dow);
-  const nextWed = new Date(today); nextWed.setDate(today.getDate() + daysToNextWed);
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - dow);
+  const thisWed = new Date(startOfWeek);
+  thisWed.setDate(startOfWeek.getDate() + 3);
+  thisWed.setHours(23, 59, 59, 999);
+  const isPast = today > thisWed;
+  const displayWed = new Date(thisWed);
+  if (isPast) displayWed.setDate(thisWed.getDate() + 7);
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(nextWed)}(水) 23:59`;
+  document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(displayWed)}(水) 23:59`;
 })();
 
 document.getElementById('target-week').textContent =
-  `翌々週 ${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
+  `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
 </script>
 </body>
 </html>
