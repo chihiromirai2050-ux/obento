@@ -634,14 +634,14 @@
     <div class="header-meta">
       <div class="header-meta-item">
         <div class="icon">📅</div>
-        <span id="target-week">翌週 月・火・木</span>
+        <span id="target-week">翌々週 月・火・木</span>
       </div>
       <div class="header-meta-item">
         <div class="icon">💴</div>
         <span>会社負担 半額</span>
       </div>
     </div>
-    <div class="deadline-chip">⏰ 締め切り：今週水曜中</div>
+    <div class="deadline-chip" id="deadline-chip">⏰ 締め切り：-- 23:59</div>
   </div>
 </header>
 
@@ -825,6 +825,7 @@ const SERIES = [
         { id:'B05', name:'白ごはん大盛', price: 600 },
         { id:'B06', name:'混ぜご飯',     price: 650 },
       ]},
+
       { name: 'ささみはんぺん（フライ）', items: [
         { id:'B10', name:'白ごはん',     price: 600 },
         { id:'B11', name:'白ごはん大盛', price: 600 },
@@ -856,8 +857,9 @@ const DAYS = ['月', '火', '木'];
 function getNextWeekDates() {
   const today = new Date();
   const dow = today.getDay();
+  // 翌々週の月曜を計算
   const daysToMon = (dow === 0) ? 1 : (8 - dow) % 7 || 7;
-  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
+  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + 7);
   const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
   const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
   const fmt    = d => `${d.getMonth()+1}/${d.getDate()}`;
@@ -1295,8 +1297,18 @@ function resetForm() {
 renderMenuArea();
 renderDays();
 updateAll();
+// 来週水曜の日付を計算して締め切りに表示
+(function() {
+  const today = new Date();
+  const dow = today.getDay();
+  const daysToNextWed = (dow === 0) ? 3 : (dow <= 3) ? (3 - dow + 7) : (10 - dow);
+  const nextWed = new Date(today); nextWed.setDate(today.getDate() + daysToNextWed);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(nextWed)}(水) 23:59`;
+})();
+
 document.getElementById('target-week').textContent =
-  `翌週 ${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
+  `翌々週 ${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
 </script>
 </body>
 </html>
