@@ -634,7 +634,7 @@
     <div class="header-meta">
       <div class="header-meta-item">
         <div class="icon">📅</div>
-        <span id="target-week">月・火・木</span>
+        <span id="target-week">火・木・金</span>
       </div>
       <div class="header-meta-item">
         <div class="icon">💴</div>
@@ -666,8 +666,21 @@
 
   <!-- メニュー選択 -->
   <div class="menu-section fade-in">
+    <!-- メニュータブ -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button id="tab-tuethu" onclick="switchTab('tuethu')" style="flex:1;padding:10px;background:var(--green-deep);color:#fff;border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">火・木メニュー🍱</button>
+      <button id="tab-fri" onclick="switchTab('fri')" style="flex:1;padding:10px;background:#eee;color:var(--text-mid);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">金メニュー🍱</button>
+    </div>
     <div class="menu-section-top">
-      <div class="section-label" style="margin-bottom:0">メニューを選ぶ</div>
+      <div style="display:inline-flex;align-items:center;position:relative;margin-bottom:4px;">
+        <div style="background:#d4d4d4;border:2px solid #aaa;border-radius:4px;padding:10px 24px;box-shadow:2px 2px 4px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.7);">
+          <div style="position:absolute;top:5px;left:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
+          <div style="position:absolute;top:5px;right:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
+          <div style="position:absolute;bottom:5px;left:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
+          <div style="position:absolute;bottom:5px;right:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
+          <span id="menu-section-label" style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:800;color:#222;letter-spacing:0.05em;">隆ちゃん弁当🏠</span>
+        </div>
+      </div>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" class="search-input" id="menu-search"
@@ -732,12 +745,12 @@ const COMPANY_MAX = Infinity;
 // 選択不可にしたい日付を 'YYYY-MM-DD' 形式で追加してください
 const CLOSED_DATES = [
   '2026-04-03',
-   '2025-05-01',
-   '2026-06-01',
-   '2026-10-12',
-   '2026-12-31',
-   '2027-01-01',
-   '2027-01-02',
+  '2025-05-01',
+  '2026-06-01',
+  '2026-10-12',
+  '2026-12-31',
+  '2027-01-01',
+  '2027-01-02',
 ];
 // ─────────────────────────────────────────────────────
 
@@ -816,6 +829,28 @@ function nameKeydown(e) {
 }
 
 // ── シリーズ・メニューデータ ──────────────────────
+// ── 水曜専用メニュー ──────────────────────────
+// ✏️ 水曜メニューはここを編集してください
+const WED_MENUS = [];
+
+// ── 金曜専用メニュー ──────────────────────────
+// ✏️ 金曜メニューはここを編集してください
+const FRI_OKAZU = [
+  { name: '幕ノ内弁当', note: '⚠️日替わり弁当です（生姜焼き、ハンバーグ、油淋鶏、野菜炒めなどさまざま）', items: [
+    { id:'F01', name:'白ごはん', price: 750 },
+    { id:'F02', name:'白ごはん大盛', price: 820 },
+  ]},
+  { name: 'アジ・イカフライ弁当', items: [
+    { id:'F03', name:'白ごはん', price: 600 },
+    { id:'F04', name:'白ごはん大盛', price: 670 },
+  ]},
+  { name: '唐揚げ弁当(3個入り)', items: [
+    { id:'F05', name:'白ごはん', price: 570 },
+    { id:'F06', name:'白ごはん大盛', price: 640 },
+  ]},
+];
+const FRI_MENUS = FRI_OKAZU.flatMap(o => o.items.map(i => ({ ...i, okazuName: o.name })));
+
 const SERIES = [
   { key: 's-bentoya2', label: 'メニュー', color: '#2e7d32', bg: '#f4f9f6', border: 'rgba(46,125,50,0.14)',
     okazu: [
@@ -840,7 +875,7 @@ const SERIES = [
         { id:'B14', name:'白ごはん大盛', price: 600 },
         { id:'B15', name:'混ぜご飯',     price: 650 },
       ]},
-      { name: 'ハンバーグ', note: '⚠️日によって味が違います（煮込み・和風・チーズ・豆腐など）', items: [
+      { name: 'ハンバーグ', note: '⚠️日によって味が違います（煮込み・和風・チーズ・豆腐）', items: [
         { id:'B16', name:'白ごはん',     price: 600 },
         { id:'B17', name:'白ごはん大盛', price: 600 },
         { id:'B18', name:'混ぜご飯',     price: 650 },
@@ -855,9 +890,13 @@ const SERIES = [
   },
 ];
 
-const ALL_MENUS = SERIES.flatMap(s => s.items.map(m => ({ ...m, seriesKey: s.key, color: s.color })));
+const ALL_MENUS = [
+  ...SERIES.flatMap(s => s.items.map(m => ({ ...m, seriesKey: s.key, color: s.color }))),
+  ...WED_MENUS.map(m => ({ ...m, seriesKey: 's-wed', color: '#7b5ea7' })),
+  ...FRI_MENUS.map(m => ({ ...m, seriesKey: 's-fri', color: '#c0392b' })),
+];
 
-const DAYS = ['月', '火', '木'];
+const DAYS = ['火', '木', '金'];
 function getNextWeekDates() {
   const today = new Date();
   const dow = today.getDay(); // 0=日,1=月,...,3=水,...
@@ -876,26 +915,73 @@ function getNextWeekDates() {
   const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + (weeksAhead - 1) * 7);
   const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
   const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
   const fmt    = d => `${d.getMonth()+1}/${d.getDate()}`;
   const fmtISO = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   return {
-    labels: [fmt(mon), fmt(tue), fmt(thu)],
-    isos:   [fmtISO(mon), fmtISO(tue), fmtISO(thu)],
+    labels: [fmt(tue), fmt(thu), fmt(fri)],
+    isos:   [fmtISO(tue), fmtISO(thu), fmtISO(fri)],
   };
 }
 const { labels: dates, isos: dateISOs } = getNextWeekDates();
 
 // 休業日チェック（CLOSED_DATESに含まれる曜日はロック）
-const closedDays = { 月: false, 火: false, 木: false };
+const closedDays = { 火: false, 木: false, 金: false };
 DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
 
-const selections = { 月: [], 火: [], 木: [] };
-const skipped    = { 月: false, 水: false, 金: false };
+const selections = { 火: [], 木: [], 金: [] };
+const skipped    = { 火: false, 木: false, 金: false };
 
 // ── メニューエリア描画 ──────────────────────────
+let currentTab = 'tuethu'; // 'mon' or 'tuethu'
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-tuethu').style.background = tab === 'tuethu' ? 'var(--green-deep)' : '#eee';
+  document.getElementById('tab-tuethu').style.color = tab === 'tuethu' ? '#fff' : 'var(--text-mid)';
+  document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-deep)' : '#eee';
+  document.getElementById('tab-fri').style.color = tab === 'fri' ? '#fff' : 'var(--text-mid)';
+  document.getElementById('menu-section-label').textContent = tab === 'fri' ? 'おひさまkitchen🏠' : '隆ちゃん弁当🏠';
+  renderMenuArea();
+}
+
 function renderMenuArea() {
   const OKAZU_COLORS = ['#e8a099','#e8b899','#e8cc99','#dda899','#e8a0ad','#dda899','#e8bc99'];
   const area = document.getElementById('menu-area');
+
+  if (currentTab === 'fri') {
+    const FRI_COLORS = ['#8ab5a0','#a0b58a','#b5a08a'];
+    area.innerHTML = `<div style="display:flex;flex-direction:column;gap:4px;">` +
+      FRI_OKAZU.map((o, oi) => {
+        const col = FRI_COLORS[oi % FRI_COLORS.length];
+        return `<div style="margin-bottom:18px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+            <div style="display:inline-block;background:${col};padding:5px 18px 5px 14px;border-radius:6px;">
+              <span style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:0.03em;">${o.name}</span>
+            </div>
+            ${o.note ? `<span style="font-size:11px;color:var(--text-dark);font-weight:500;">${o.note}</span>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;padding:0 4px;">
+            ${o.items.map(m => {
+              const share = calcShare(m.price);
+              return `<button class="menu-btn" id="mbtn-${m.id}" onclick="tapMenu('${m.id}')"
+                style="background:#fafaf8;border-color:${col}40;flex:1;min-width:0;">
+                <div class="btn-check" style="background:${col};">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="btn-name" style="font-size:13px;">${m.name}</div>
+                <div class="btn-footer" style="flex-direction:column;align-items:flex-start;gap:2px;">
+                  <div><span class="btn-share-label">自己負担</span><br>
+                  <span class="btn-share-amount" style="color:${col};font-size:14px;">¥${share.toLocaleString()}</span></div>
+                </div>
+              </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+    return;
+  }
+
   area.innerHTML = SERIES.map(s => `
     <div class="series-block" data-series="${s.key}">
       ${s.okazu.map((o, oi) => {
@@ -991,11 +1077,13 @@ let pendingMenuId = null;
 
 function tapMenu(menuId) {
   pendingMenuId = menuId;
-  // 追加できる曜日（休業・お休みでない）を調べる
-  const available = DAYS.filter(d => !skipped[d] && !closedDays[d]);
+  // 月曜メニューは月曜のみ、火・木メニューは火・木のみ選択可能
+  const isWedMenu = WED_MENUS.some(m => m.id === menuId);
+  const isFriMenu = FRI_MENUS.some(m => m.id === menuId);
+  const allowedDays = isWedMenu ? ['水'] : isFriMenu ? ['金'] : ['火', '木'];
+  const available = allowedDays.filter(d => !skipped[d] && !closedDays[d]);
   if (available.length === 0) return;
   if (available.length === 1) {
-    // 1曜日しかないなら直接追加
     addToDay(available[0], menuId);
     return;
   }
@@ -1018,7 +1106,7 @@ function showDayPicker(menuId, available) {
       <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green-mid);margin-bottom:6px;">追加する曜日を選択</div>
       <div style="font-size:15px;font-weight:800;font-family:'M PLUS Rounded 1c',sans-serif;color:var(--text-dark);margin-bottom:20px;">${menu.okazuName ? menu.okazuName + ' ' + menu.name : menu.name}</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        ${DAYS.filter(d => !closedDays[d]).map((d) => `
+        ${(WED_MENUS.some(m => m.id === menuId) ? ['水'] : FRI_MENUS.some(m => m.id === menuId) ? ['金'] : ['火','木']).filter(d => !closedDays[d]).map((d) => `
           <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px;">
             <div style="display:flex;gap:8px;align-items:stretch;">
               <button onclick="addToDay('${d}','${menuId}')" style="
@@ -1235,13 +1323,15 @@ function handleSubmit() {
   }
   if (!valid) return;
 
-  let totalShare = 0;
+  // 曜日別金額を計算
+  const dayShare = {};
   DAYS.forEach(d => {
-    selections[d].forEach(id => {
+    dayShare[d] = selections[d].reduce((sum, id) => {
       const menu = ALL_MENUS.find(m => m.id === id);
-      if (menu && menu.price > 0) totalShare += calcShare(menu.price);
-    });
+      return sum + (menu && menu.price > 0 ? calcShare(menu.price) : 0);
+    }, 0);
   });
+  let totalShare = Object.values(dayShare).reduce((s, v) => s + v, 0);
 
   // 定価合計・会社負担合計を計算
   let totalFull = 0;
@@ -1258,14 +1348,17 @@ function handleSubmit() {
       method: 'POST',
       body: JSON.stringify({
         name: nameEl.value,
-        mon: selections['月'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
         tue: selections['火'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
         thu: selections['木'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        fri: selections['金'].map(id => { const m = ALL_MENUS.find(m => m.id === id); return m ? (m.okazuName ? m.okazuName + ' ' + m.name : m.name) : ''; }).join('・'),
+        tueShare: dayShare['火'] || 0,
+        thuShare: dayShare['木'] || 0,
+        friShare: dayShare['金'] || 0,
         totalShare,
         totalFull,
         totalCompany,
-        weekLabel: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
-        deliveryDates: `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`,
+        weekLabel: `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`,
+        deliveryDates: `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`,
         survey: (document.getElementById('survey-text')?.value || '').trim(),
       })
     }).then(() => {
@@ -1328,7 +1421,7 @@ updateAll();
 })();
 
 document.getElementById('target-week').textContent =
-  `${dates[0]}(月)・${dates[1]}(火)・${dates[2]}(木)`;
+  `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
 </script>
 </body>
 </html>
