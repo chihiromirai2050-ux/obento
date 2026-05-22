@@ -395,12 +395,24 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbxK02G6h3oDlmuhZrVGk0AB
 function getNextWeekLabel() {
   const today = new Date();
   const dow = today.getDay();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - dow);
+  const thisWed = new Date(startOfWeek);
+  thisWed.setDate(startOfWeek.getDate() + 3);
+  thisWed.setHours(23, 59, 59, 999);
+  const weeksAhead = today > thisWed ? 2 : 1;
   const daysToMon = dow === 0 ? 1 : (8 - dow) % 7 || 7;
-  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon);
+  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + (weeksAhead - 1) * 7);
   const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
   const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  return `翌週 ${fmt(mon)}(月)・${fmt(tue)}(火)・${fmt(thu)}(木)`;
+  // 6/1以降は火・木・金
+  const isNewSchedule = mon.getMonth() > 4 || (mon.getMonth() === 5 && mon.getDate() >= 1);
+  if (isNewSchedule) {
+    return `${fmt(tue)}(火)・${fmt(thu)}(木)・${fmt(fri)}(金)`;
+  }
+  return `${fmt(tue)}(火)・${fmt(thu)}(木)`;
 }
 
 document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel();
@@ -471,18 +483,37 @@ function getFilteredOrders() {
   return allOrders.filter(o => o.weekLabel === selectedWeek);
 }
 
+let weekFilterOpen = false;
+
 function renderWeekFilter() {
   const bar = document.getElementById('filter-bar');
   const weeks = getWeeks();
   bar.innerHTML = '';
 
-  weeks.forEach(w => {
-    const btn = document.createElement('button');
-    btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
-    btn.textContent = w;
-    btn.onclick = () => { selectedWeek = w; renderAll(); };
-    bar.appendChild(btn);
-  });
+  // 選択中の週ラベルを取得
+  const selectedLabel = selectedWeek || '週を選択';
+
+  // トグルボタン
+  const toggle = document.createElement('button');
+  toggle.className = 'week-chip active';
+  toggle.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  toggle.innerHTML = `<span>${selectedLabel}</span><span style="font-size:11px;">${weekFilterOpen ? '▲' : '▼'}</span>`;
+  toggle.onclick = () => { weekFilterOpen = !weekFilterOpen; renderWeekFilter(); };
+  bar.appendChild(toggle);
+
+  // 展開時のみ週一覧を表示
+  if (weekFilterOpen) {
+    const list = document.createElement('div');
+    list.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;width:100%;';
+    weeks.forEach(w => {
+      const btn = document.createElement('button');
+      btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
+      btn.textContent = w;
+      btn.onclick = () => { selectedWeek = w; weekFilterOpen = false; renderAll(); };
+      list.appendChild(btn);
+    });
+    bar.appendChild(list);
+  }
 }
 
 function renderStats() {
