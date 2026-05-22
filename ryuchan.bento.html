@@ -765,7 +765,7 @@ function calcShare(price) {
 const NAMES = [
   '社長','小野塚','佐藤','黒田','白石','長谷川','澤田','萬石','みちる','荒木',
   '若栗','加藤','岩崎','中村叶','山崎','髙梨','中川','太田','原田','杉木',
-  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田','乗田','成澤',
+  '野尻','森山','久保','古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田','成澤',
 ];
 
 let nameActiveIdx = -1;
@@ -1149,6 +1149,14 @@ function addToDay(day, menuId) {
   updateAll();
   // 揃った瞬間だけスクロール（すでに揃っていた場合はスクロールしない）
   const allDone = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+
+  // 火・木が揃ったら金曜タブに切り替え
+  const tuethuDone = ['火','木'].filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
+  if (!wasDone && tuethuDone && !allDone && currentTab === 'tuethu') {
+    setTimeout(() => switchTab('fri'), 300);
+    return;
+  }
+
   if (!wasDone && allDone) {
     setTimeout(() => {
       const nameVal = document.getElementById("name-select").value.trim();
