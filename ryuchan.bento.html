@@ -1154,7 +1154,6 @@ function addToDay(day, menuId) {
   const tuethuDone = ['火','木'].filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   if (!wasDone && tuethuDone && !allDone && currentTab === 'tuethu') {
     setTimeout(() => switchTab('fri'), 300);
-    return;
   }
 
   if (!wasDone && allDone) {
