@@ -959,10 +959,8 @@ function renderMenuArea() {
       FRI_OKAZU.map((o, oi) => {
         const col = FRI_COLORS[oi % FRI_COLORS.length];
         return `<div style="margin-bottom:18px;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
-            <div style="display:inline-block;background:${col};padding:5px 18px 5px 14px;border-radius:6px;">
-              <span style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:15px;font-weight:800;color:#fff;letter-spacing:0.03em;">${o.name}</span>
-            </div>
+          <div style="display:flex;align-items:baseline;gap:10px;border-bottom:3px solid ${col};margin:0 0 10px;padding:4px 0 6px;flex-wrap:wrap;">
+            <span style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:15px;font-weight:800;color:var(--text-dark);letter-spacing:0.03em;">${o.name}</span>
             ${o.note ? `<span style="font-size:11px;color:var(--text-dark);font-weight:500;">${o.note}</span>` : ''}
           </div>
           <div style="display:flex;gap:8px;padding:0 4px;">
@@ -992,13 +990,9 @@ function renderMenuArea() {
         const col = OKAZU_COLORS[oi % OKAZU_COLORS.length];
         return `
         <div style="margin-bottom:18px;">
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
-            <div style="display:inline-block; background:${col}; padding:5px 18px 5px 14px; border-radius:6px;">
-              <span style="font-family:'M PLUS Rounded 1c',sans-serif; font-size:15px; font-weight:800; color:#fff; letter-spacing:0.03em;">
-                ${o.name}
-              </span>
-            </div>
-            ${o.note ? `<span style="font-size:11px; color:var(--text-dark); font-weight:500;">${o.note}</span>` : ''}
+          <div style="display:flex;align-items:baseline;gap:10px;border-bottom:3px solid ${col};margin:0 0 10px;padding:4px 0 6px;flex-wrap:wrap;">
+            <span style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:15px;font-weight:800;color:var(--text-dark);letter-spacing:0.03em;">${o.name}</span>
+            ${o.note ? `<span style="font-size:11px;color:var(--text-dark);font-weight:500;">${o.note}</span>` : ''}
           </div>
           ${o.comingSoon ? `
             <div style="padding:10px 14px; background:#f5f5f5; border-radius:10px; color:#aaa; font-size:13px; font-weight:700; letter-spacing:0.05em;">🔧 準備中</div>
