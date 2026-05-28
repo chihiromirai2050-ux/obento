@@ -681,7 +681,7 @@
           <span id="menu-section-label" style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:800;color:#222;letter-spacing:0.05em;">隆ちゃん弁当🏠</span>
         </div>
       </div>
-      <div class="search-wrap">
+      <div class="search-wrap" id="menu-search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" class="search-input" id="menu-search"
           placeholder="メニューを検索…"
@@ -942,7 +942,11 @@ function switchTab(tab) {
   document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-deep)' : '#eee';
   document.getElementById('tab-fri').style.color = tab === 'fri' ? '#fff' : 'var(--text-mid)';
   document.getElementById('menu-section-label').textContent = tab === 'fri' ? 'おひさまkitchen🏠' : '隆ちゃん弁当🏠';
+  // 検索窓の表示切り替え
+  document.getElementById('menu-search-wrap').style.display = tab === 'fri' ? 'none' : '';
   renderMenuArea();
+  // メニューセクション上部にスクロール
+  document.querySelector('.menu-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderMenuArea() {
