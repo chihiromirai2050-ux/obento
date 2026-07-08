@@ -766,58 +766,58 @@ let nameActiveIdx = -1;
 let orderHistoryCache = null;
 
 function renderHistory(name) {
-  const box = document.getElementById('name-history');
-  if (!box) return;
+  // まとめ表示は廃止。各曜日への差し込みは applyHistoryToDays が行う。
+}
 
-  // 名前のゆれ（前後の空白・全角半角スペースなど）を吸収して比較するための関数
+// 名前を選んだら、各曜日に「前回その曜日に頼んだもの」を差し込む
+function applyHistoryToDays(name) {
   const normalize = s => String(s || '').replace(/[\s\u3000]/g, '').trim();
   const target = normalize(name);
 
+  const fillDays = () => {
+    const mine = (orderHistoryCache || [])
+      .filter(o => normalize(o.name) === target);
+
+    DAYS.forEach(day => {
+      const box = document.getElementById('lastorder-' + day);
+      if (!box) return;
+
+      const key = day === '火' ? 'tue' : day === '木' ? 'thu' : 'fri';
+      const shareKey = day === '火' ? 'tueShare' : day === '木' ? 'thuShare' : 'friShare';
+
+      // その曜日に注文がある履歴を、新しい順に探す
+      const past = [...mine].reverse().find(o => o[key] && String(o[key]).trim());
+      if (!past) { box.innerHTML = ''; return; }
+
+      // 前回その曜日に頼んだ日付を weekLabel から取り出す
+      let dateStr = '';
+      if (past.weekLabel) {
+        const parts = String(past.weekLabel).split('・');
+        const hit = parts.find(p => p.includes('(' + day + ')'));
+        if (hit) { const m = hit.match(/(\d+\/\d+)/); if (m) dateStr = m[1]; }
+      }
+
+      const share = Number(past[shareKey]) || 0;
+
+      box.innerHTML =
+        '<div style="background:var(--orange-light);border:1.5px solid rgba(224,122,47,0.35);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+          '<div style="min-width:0;">' +
+            '<div style="font-size:10px;font-weight:700;color:var(--orange-accent);letter-spacing:0.04em;margin-bottom:2px;">📖 前回' + (dateStr ? '（' + dateStr + '）' : '') + '</div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text-dark);">' + past[key] + '</div>' +
+          '</div>' +
+          (share > 0 ? '<div style="font-size:13px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥' + share.toLocaleString() + '</div>' : '') +
+        '</div>';
+    });
+  };
+
   if (!orderHistoryCache) {
-    box.innerHTML = `<div style="font-size:12px;color:var(--text-light);padding:8px 0;">履歴を読み込み中…</div>`;
     fetch(GAS_URL)
       .then(res => res.json())
-      .then(data => {
-        orderHistoryCache = data.orders || [];
-        renderHistory(name);
-      })
-      .catch(() => {
-        box.innerHTML = `<div style="font-size:12px;color:#e05252;padding:8px 0;">履歴を読み込めませんでした</div>`;
-      });
+      .then(data => { orderHistoryCache = data.orders || []; fillDays(); })
+      .catch(() => {});
     return;
   }
-
-  const history = orderHistoryCache
-    .filter(o => normalize(o.name) === target)
-    .slice(-4)
-    .reverse();
-
-  if (history.length === 0) {
-    box.innerHTML = `<div style="font-size:12px;color:var(--text-light);padding:8px 0;">過去の注文履歴はありません</div>`;
-    return;
-  }
-
-  box.innerHTML = `
-    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,61,43,0.08);">
-      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--green-mid);margin-bottom:8px;">
-        📖 ${name}さんの注文履歴
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        ${history.map(h => {
-          const items = [
-            h.mon && `月:${h.mon}`, h.tue && `火:${h.tue}`, h.wed && `水:${h.wed}`,
-            h.thu && `木:${h.thu}`, h.fri && `金:${h.fri}`,
-          ].filter(Boolean).join('　');
-          return `<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:12px;">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <span style="font-weight:700;color:var(--text-dark);">${h.weekLabel || ''}</span>
-              <span style="font-weight:700;color:var(--orange-accent);">¥${(h.total||0).toLocaleString()}</span>
-            </div>
-            <div style="color:var(--text-mid);">${items || '—'}</div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+  fillDays();
 }
   
 function nameInput(val) {
@@ -843,7 +843,7 @@ function selectName(name) {
   closeSuggestions();
   input.classList.remove("error-field");
   document.getElementById("name-error").classList.remove("visible");
-  renderHistory(name);   // ← ★この1行を追加
+  applyHistoryToDays(name);
   // 名前確定後、全曜日が揃っていれば送信ボタンへ
   const allDoneOnName = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   if (allDoneOnName) {
@@ -1083,8 +1083,7 @@ function renderDays() {
     return `
     <div class="day-section" id="daysec-${day}">
       <div class="day-header">
-        <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${day}曜日</div>
-        <div class="day-date">${dates[di]}</div>
+        <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${dates[di]}(${day})</div>
         <div class="day-selected-name ${(!isClosed && hasItems) ? '' : 'empty'}" id="dayname-${day}">
           ${isClosed ? '提供なし' : hasItems
             ? items.length + '品選択中'
@@ -1098,7 +1097,8 @@ function renderDays() {
       </div>
       ${isClosed
         ? `<div class="day-closed-card">🔒 この日はお弁当の提供がありません</div>`
-        : `<div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
+        : `<div class="day-last-order" id="lastorder-${day}"></div>
+           <div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
             — 注文なし —
            </div>
            <div class="day-items-list" id="itemslist-${day}">
