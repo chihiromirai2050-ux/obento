@@ -1292,6 +1292,9 @@ function updateAll() {
 
   // 曜日行を再描画
   renderDays();
+  // 名前が選ばれていれば、再描画後も各曜日に前回注文を出し直す
+  const nv = document.getElementById('name-select').value.trim();
+  if (nv && NAMES.includes(nv)) applyHistoryToDays(nv);
 
   // サマリー更新
   let total = 0;
