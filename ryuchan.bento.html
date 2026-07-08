@@ -662,6 +662,7 @@
       <div class="name-suggestions" id="name-suggestions"></div>
     </div>
     <div class="error-msg" id="name-error">名前を選択してください</div>
+    <div id="name-history"></div>
   </div>
 
   <!-- メニュー選択 -->
@@ -762,7 +763,54 @@ const NAMES = [
 ];
 
 let nameActiveIdx = -1;
+let orderHistoryCache = null;
 
+function renderHistory(name) {
+  const box = document.getElementById('name-history');
+  if (!box) return;
+
+  if (!orderHistoryCache) {
+    box.innerHTML = `<div style="font-size:12px;color:var(--text-light);padding:8px 0;">履歴を読み込み中…</div>`;
+    fetch(GAS_URL)
+      .then(res => res.json())
+      .then(data => {
+        orderHistoryCache = data.orders || [];
+        renderHistory(name);
+      })
+      .catch(() => { box.innerHTML = ''; });
+    return;
+  }
+
+  const history = orderHistoryCache.filter(o => o.name === name).slice(-4).reverse();
+
+  if (history.length === 0) {
+    box.innerHTML = `<div style="font-size:12px;color:var(--text-light);padding:8px 0;">過去の注文履歴はありません</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,61,43,0.08);">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;color:var(--green-mid);margin-bottom:8px;">
+        📖 ${name}さんの注文履歴
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${history.map(h => {
+          const items = [
+            h.mon && `月:${h.mon}`, h.tue && `火:${h.tue}`, h.wed && `水:${h.wed}`,
+            h.thu && `木:${h.thu}`, h.fri && `金:${h.fri}`,
+          ].filter(Boolean).join('　');
+          return `<div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-weight:700;color:var(--text-dark);">${h.weekLabel}</span>
+              <span style="font-weight:700;color:var(--orange-accent);">¥${(h.total||0).toLocaleString()}</span>
+            </div>
+            <div style="color:var(--text-mid);">${items || '—'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+  
 function nameInput(val) {
   const q = val.trim();
   const filtered = q ? NAMES.filter(n => n.includes(q)) : NAMES;
@@ -786,6 +834,7 @@ function selectName(name) {
   closeSuggestions();
   input.classList.remove("error-field");
   document.getElementById("name-error").classList.remove("visible");
+  renderHistory(name);   // ← ★この1行を追加
   // 名前確定後、全曜日が揃っていれば送信ボタンへ
   const allDoneOnName = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   if (allDoneOnName) {
