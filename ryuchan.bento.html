@@ -1493,7 +1493,6 @@ function renderOrdersTable() {
           font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${wk}</button>`;
       }).join('')}
     </div>`;
-
   // 選んだ週の、注文がある人だけ
   const rows = ordersAll.filter(o =>
     (o.weekLabel || 'その他') === ordersActiveWeek &&
@@ -1535,6 +1534,28 @@ function renderOrdersTable() {
         </tbody>
       </table>
     </div>`;
+}
+
+// 一覧の開閉（初めて開いたときにデータを読み込む）
+let ordersTableLoaded = false;
+function toggleOrdersTable() {
+  const panel = document.getElementById('orders-table-panel');
+  const arrow = document.getElementById('orders-toggle-arrow');
+  const refreshBtn = document.getElementById('orders-refresh-btn');
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) {
+    panel.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+    if (refreshBtn) refreshBtn.style.display = 'none';
+  } else {
+    panel.style.display = 'block';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+    if (refreshBtn) refreshBtn.style.display = 'inline-block';
+    if (!ordersTableLoaded) {
+      ordersTableLoaded = true;
+      loadOrdersTable();
+    }
+  }
 }
 
 document.getElementById('target-week').textContent =
