@@ -762,69 +762,7 @@ const NAMES = [
 ];
 
 let nameActiveIdx = -1;
-let orderHistoryCache = null;
 
-function renderHistory(name) {
-  // まとめ表示は廃止。各曜日への差し込みは applyHistoryToDays が行う。
-}
-
-// 名前を選んだら、各曜日に「前回その曜日に頼んだもの」を差し込む
-function applyHistoryToDays(name) {
-  const normalize = s => String(s || '').replace(/[\s\u3000]/g, '').trim();
-  const target = normalize(name);
-
-  const fillDays = () => {
-    const mine = (orderHistoryCache || [])
-      .filter(o => normalize(o.name) === target);
-
-    DAYS.forEach(day => {
-      const box = document.getElementById('lastorder-' + day);
-      if (!box) return;
-
-      const key = day === '火' ? 'tue' : day === '木' ? 'thu' : 'fri';
-      const shareKey = day === '火' ? 'tueShare' : day === '木' ? 'thuShare' : 'friShare';
-
-      // その曜日に注文がある履歴を、新しい順に探す
-      const past = [...mine].reverse().find(o => o[key] && String(o[key]).trim());
-      if (!past) { box.innerHTML = ''; return; }
-
-      // 前回その曜日に頼んだ日付を weekLabel から取り出す
-      let dateStr = '';
-      if (past.weekLabel) {
-        const parts = String(past.weekLabel).split('・');
-        const hit = parts.find(p => p.includes('(' + day + ')'));
-        if (hit) { const m = hit.match(/(\d+\/\d+)/); if (m) dateStr = m[1]; }
-      }
-
-      const share = Number(past[shareKey]) || 0;
-
-      box.innerHTML =
-        '<div style="background:var(--orange-light);border:1.5px solid rgba(224,122,47,0.35);border-radius:10px;padding:8px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
-          '<div style="min-width:0;">' +
-            '<div style="font-size:10px;font-weight:700;color:var(--orange-accent);letter-spacing:0.04em;margin-bottom:2px;">📖 前回' + (dateStr ? '（' + dateStr + '）' : '') + '</div>' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text-dark);">' + past[key] + '</div>' +
-          '</div>' +
-          (share > 0 ? '<div style="font-size:13px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥' + share.toLocaleString() + '</div>' : '') +
-        '</div>';
-    });
-  };
-
-  if (!orderHistoryCache) {
-    fetch(GAS_URL)
-      .then(res => res.json())
-      .then(data => { orderHistoryCache = data.orders || []; fillDays(); })
-      .catch(() => {});
-    return;
-  }
-  fillDays();
-}
-  
-function nameInput(val) {
-  const q = val.trim();
-  const filtered = q ? NAMES.filter(n => n.includes(q)) : NAMES;
-  showSuggestions(filtered, q);
-  nameActiveIdx = -1;
-}
 
 function showSuggestions(list, q) {
   const box = document.getElementById('name-suggestions');
@@ -842,7 +780,7 @@ function selectName(name) {
   closeSuggestions();
   input.classList.remove("error-field");
   document.getElementById("name-error").classList.remove("visible");
-  applyHistoryToDays(name);
+  
   // 名前確定後、全曜日が揃っていれば送信ボタンへ
   const allDoneOnName = DAYS.filter(d => !closedDays[d]).every(d => skipped[d] || selections[d].length > 0);
   if (allDoneOnName) {
@@ -1082,7 +1020,8 @@ function renderDays() {
     return `
     <div class="day-section" id="daysec-${day}">
       <div class="day-header">
-        <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${dates[di]}(${day})</div>
+        <div class="day-pill" ${isClosed ? 'style="background:var(--text-light)"' : ''}>${day}曜日</div>
+        <div class="day-date">${dates[di]}</div>
         <div class="day-selected-name ${(!isClosed && hasItems) ? '' : 'empty'}" id="dayname-${day}">
           ${isClosed ? '提供なし' : hasItems
             ? items.length + '品選択中'
@@ -1094,10 +1033,9 @@ function renderDays() {
           注文なし
         </label>`}
       </div>
-      ${isClosed
+     ${isClosed
         ? `<div class="day-closed-card">🔒 この日はお弁当の提供がありません</div>`
-        : `<div class="day-last-order" id="lastorder-${day}"></div>
-           <div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
+        : `<div class="day-skip-card ${skipped[day] ? 'active' : ''}" id="skipcard-${day}">
             — 注文なし —
            </div>
            <div class="day-items-list" id="itemslist-${day}">
@@ -1291,9 +1229,7 @@ function updateAll() {
 
   // 曜日行を再描画
   renderDays();
-  // 名前が選ばれていれば、再描画後も各曜日に前回注文を出し直す
-  const nv = document.getElementById('name-select').value.trim();
-  if (nv && NAMES.includes(nv)) applyHistoryToDays(nv);
+
 
   // サマリー更新
   let total = 0;
