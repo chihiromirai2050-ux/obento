@@ -680,6 +680,13 @@
     <div class="error-msg" id="name-error">名前を選択してください</div>
   </div>
 
+  <!-- 週選択 -->
+  <div class="week-section fade-in" style="background:var(--warm-white);border-radius:18px;padding:20px 16px;margin-bottom:28px;box-shadow:0 4px 24px rgba(26,61,43,0.10);border:1px solid rgba(26,61,43,0.06);">
+    <div class="section-label" style="margin-bottom:10px;">📅 どの週の注文？</div>
+    <div id="week-tabs" style="display:flex;gap:8px;"></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-light);line-height:1.6;">締め切りを過ぎた週も選べます。週を変えると選んだメニューはリセットされます。</div>
+  </div>
+
   <!-- メニュー選択 -->
   <div class="menu-section fade-in">
     <!-- メニュータブ -->
@@ -907,22 +914,26 @@ const ALL_MENUS = [
 ];
 
 const DAYS = ['火', '木', '金'];
-function getNextWeekDates() {
+
+// 「今まだ頼める直近の配達週」の月曜を計算する
+function getBaseMonday() {
   const today = new Date();
-  const dow = today.getDay(); // 0=日,1=月,...,3=水,...
-  // 今週の水曜の日付を計算（今日が何曜日でも今週の水曜を求める）
-  const startOfWeek = new Date(today); // 今週日曜
-  startOfWeek.setDate(today.getDate() - dow);
-  const thisWed = new Date(startOfWeek);
-  thisWed.setDate(startOfWeek.getDate() + 3);
-  thisWed.setHours(23, 59, 59, 999);
-  // 今週水曜23:59を過ぎていたら翌々週、そうでなければ翌週
-  const weeksAhead = today > thisWed ? 2 : 1;
-  // 締め切り表示：翌週か翌々週かに応じた水曜
-  const wedDeadline = new Date(thisWed);
-  if (weeksAhead === 2) wedDeadline.setDate(thisWed.getDate() + 7);
-  const daysToMon = (dow === 0) ? 1 : (8 - dow) % 7 || 7;
-  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + (weeksAhead - 1) * 7);
+  today.setHours(0, 0, 0, 0);
+  const dow = today.getDay();
+  const thisMon = new Date(today);
+  const diffToMon = (dow === 0) ? -6 : (1 - dow);
+  thisMon.setDate(today.getDate() + diffToMon);
+  thisMon.setHours(0, 0, 0, 0);
+  const deliveryTue = new Date(thisMon);
+  deliveryTue.setDate(thisMon.getDate() + 8);
+  const base = new Date(thisMon);
+  base.setDate(thisMon.getDate() + (today > deliveryTue ? 14 : 7));
+  return base;
+}
+
+function getWeekDates(offset) {
+  const mon = getBaseMonday();
+  mon.setDate(mon.getDate() + offset * 7);
   const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
   const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
   const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
@@ -931,14 +942,60 @@ function getNextWeekDates() {
   return {
     labels: [fmt(tue), fmt(thu), fmt(fri)],
     isos:   [fmtISO(tue), fmtISO(thu), fmtISO(fri)],
+    weekLabel: `${fmt(tue)}(火)・${fmt(thu)}(木)・${fmt(fri)}(金)`,
   };
 }
-const { labels: dates, isos: dateISOs } = getNextWeekDates();
 
-// 休業日チェック（CLOSED_DATESに含まれる曜日はロック）
+// 選べる週：直近(0)から未来方向に3週分
+const WEEK_COUNT = 3;
+const WEEK_OPTIONS = Array.from({ length: WEEK_COUNT }, (_, i) => ({ offset: i }));
+let currentWeekOffset = 0;
+
+let dates = getWeekDates(currentWeekOffset).labels;
+let dateISOs = getWeekDates(currentWeekOffset).isos;
+
+// 休業日チェック（週切り替え時に再計算）
 const closedDays = { 火: false, 木: false, 金: false };
-DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
+function recalcClosedDays() {
+  DAYS.forEach((day, i) => { closedDays[day] = CLOSED_DATES.includes(dateISOs[i]); });
+}
+recalcClosedDays();
 
+// 週を切り替える（選択中のメニューはリセット）
+function selectWeek(offset) {
+  currentWeekOffset = offset;
+  const w = getWeekDates(offset);
+  dates = w.labels;
+  dateISOs = w.isos;
+  recalcClosedDays();
+  DAYS.forEach(d => { selections[d] = []; skipped[d] = false; });
+  renderWeekTabs();
+  updateDeadlineChip();
+  const tw = document.getElementById('target-week');
+  if (tw) tw.textContent = w.weekLabel;
+  renderMenuArea();
+  renderDays();
+  updateAll();
+}
+
+// 週選択ボタンを描画
+function renderWeekTabs() {
+  const box = document.getElementById('week-tabs');
+  if (!box) return;
+  box.innerHTML = WEEK_OPTIONS.map(w => {
+    const active = w.offset === currentWeekOffset;
+    const wd = getWeekDates(w.offset);
+    return `<button onclick="selectWeek(${w.offset})" style="
+      flex:1;min-width:0;background:${active ? 'var(--green-deep)' : 'var(--cream)'};
+      color:${active ? '#fff' : 'var(--text-mid)'};
+      border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
+      border-radius:12px;padding:10px 8px;font-family:'Noto Sans JP',sans-serif;
+      font-size:12px;font-weight:700;cursor:pointer;line-height:1.4;white-space:nowrap;">
+      ${wd.labels[0]}〜${wd.labels[2]}
+    </button>`;
+  }).join('');
+}
+  
 const selections = { 火: [], 木: [], 金: [] };
 const skipped    = { 火: false, 木: false, 金: false };
 
@@ -1415,24 +1472,24 @@ function resetForm() {
 }
 
 // ── Init ──────────────────────────
+renderWeekTabs();
 renderMenuArea();
 renderDays();
 updateAll();
 // 締め切り日を表示（wedDeadlineはgetNextWeekDates内で計算済みの日付を利用）
-(function() {
-  const today = new Date();
-  const dow = today.getDay();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - dow);
-  const thisWed = new Date(startOfWeek);
-  thisWed.setDate(startOfWeek.getDate() + 3);
-  thisWed.setHours(23, 59, 59, 999);
-  const isPast = today > thisWed;
-  const displayWed = new Date(thisWed);
-  if (isPast) displayWed.setDate(thisWed.getDate() + 7);
-  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(displayWed)}(水) 23:59`;
-})();
+// 締め切り日を表示（選択中の週に応じて更新）
+function updateDeadlineChip() {
+  const chip = document.getElementById('deadline-chip');
+  if (!chip) return;
+  // 選択中の週の火曜(dateISOs[0])から、その前週の水曜を締め切りとする
+  const [y, m, d] = dateISOs[0].split('-').map(Number);
+  const tue = new Date(y, m - 1, d);
+  const deadlineWed = new Date(tue);
+  deadlineWed.setDate(tue.getDate() - 6); // 火曜の6日前 = 前週の水曜
+  const fmt = dt => `${dt.getMonth()+1}/${dt.getDate()}`;
+  chip.textContent = `⏰ 締め切り：${fmt(deadlineWed)}(水) 23:59`;
+}
+updateDeadlineChip();
 
 // ── 注文一覧表（週切り替え付き）──────────────────────────
 let ordersAll = [];
