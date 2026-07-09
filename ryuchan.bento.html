@@ -985,6 +985,8 @@ function selectWeek(offset) {
 function renderWeekTabs() {
   const box = document.getElementById('week-tabs');
   if (!box) return;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
   box.innerHTML = WEEK_OPTIONS.map(w => {
     const active = w.offset === currentWeekOffset;
     const wd = getWeekDates(w.offset);
@@ -993,7 +995,19 @@ function renderWeekTabs() {
     const tue = new Date(y, m - 1, d);
     const deadline = new Date(tue);
     deadline.setDate(tue.getDate() - 6);
+    deadline.setHours(23, 59, 59, 999);
     const dl = `${deadline.getMonth()+1}/${deadline.getDate()}`;
+    // 締め切りを過ぎているか
+    const isPast = now > deadline;
+    // 締め切り表示の文字と色
+    let deadlineText, deadlineColor;
+    if (isPast) {
+      deadlineText = `締切 ${dl}(水) 終了`;
+      deadlineColor = active ? 'rgba(255,255,255,0.75)' : 'var(--text-light)';
+    } else {
+      deadlineText = `締切 ${dl}(水)`;
+      deadlineColor = active ? 'rgba(255,255,255,0.85)' : 'var(--orange-accent)';
+    }
     return `<button onclick="selectWeek(${w.offset})" style="
       flex:1;min-width:0;background:${active ? 'var(--green-deep)' : 'var(--cream)'};
       color:${active ? '#fff' : 'var(--text-mid)'};
@@ -1001,7 +1015,8 @@ function renderWeekTabs() {
       border-radius:12px;padding:10px 8px;font-family:'Noto Sans JP',sans-serif;
       font-size:12px;font-weight:700;cursor:pointer;line-height:1.4;white-space:nowrap;">
       ${wd.labels[0]}〜${wd.labels[2]}
-      <br><span style="font-size:10px;font-weight:500;color:${active ? 'rgba(255,255,255,0.85)' : 'var(--orange-accent)'};">締切 ${dl}(水)</span>
+      <br><span style="font-size:10px;font-weight:500;color:${deadlineColor};">${deadlineText}</span>
+      ${isPast ? `<br><span style="font-size:9px;font-weight:700;color:${active ? '#fff' : '#e05252'};">⚠️ 締切済み（受付中）</span>` : ''}
     </button>`;
   }).join('');
 }
