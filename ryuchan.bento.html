@@ -1438,7 +1438,9 @@ function loadOrdersTable() {
     .then(res => res.json())
     .then(data => {
       const orders = data.orders || [];
-      if (!orders.length) {
+      const filtered = orders.filter(o => (o.tue && String(o.tue).trim()) || (o.thu && String(o.thu).trim()) || (o.fri && String(o.fri).trim()));
+      
+      if (!filtered.length) {
         wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
         return;
       }
@@ -1454,7 +1456,7 @@ function loadOrdersTable() {
             </tr>
           </thead>
           <tbody>
-            ${orders.map((o, i) => {
+            ${filtered.map((o, i) => {
               const cell = v => v && String(v).trim()
                 ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
                 : `<span style="color:var(--text-light);">—</span>`;
