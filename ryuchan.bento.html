@@ -650,12 +650,17 @@
 
 <!-- 注文一覧表 -->
   <div class="orders-table-section fade-in" style="background:var(--warm-white);border-radius:18px;padding:20px 16px;margin-bottom:28px;box-shadow:0 4px 24px rgba(26,61,43,0.10);border:1px solid rgba(26,61,43,0.06);">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+    <div onclick="toggleOrdersTable()" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;user-select:none;">
       <div class="section-label" style="margin-bottom:0;">📋 みんなの注文一覧</div>
-      <button onclick="loadOrdersTable()" style="background:var(--cream);border:1.5px solid rgba(26,61,43,0.12);border-radius:100px;padding:6px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;color:var(--green-mid);cursor:pointer;">↻ 更新</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="event.stopPropagation();loadOrdersTable();" id="orders-refresh-btn" style="display:none;background:var(--cream);border:1.5px solid rgba(26,61,43,0.12);border-radius:100px;padding:6px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;color:var(--green-mid);cursor:pointer;">↻ 更新</button>
+        <span id="orders-toggle-arrow" style="font-size:14px;color:var(--green-mid);transition:transform 0.2s;">▼</span>
+      </div>
     </div>
-    <div id="orders-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>
+    <div id="orders-table-panel" style="display:none;margin-top:14px;">
+      <div id="orders-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>
+      </div>
     </div>
   </div>
 
@@ -1531,7 +1536,7 @@ function renderOrdersTable() {
       </table>
     </div>`;
 }
-loadOrdersTable();
+
 document.getElementById('target-week').textContent =
   `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
 </script>
