@@ -1575,7 +1575,7 @@ function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
   wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>`;
-  fetch(GAS_URL)
+  fetch(GAS_URL, { cache: 'no-cache' })
     .then(res => res.json())
     .then(data => {
       ordersAll = data.orders || [];
