@@ -1014,7 +1014,7 @@ function renderWeekTabs() {
       border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
       border-radius:12px;padding:12px 6px;font-family:'Noto Sans JP',sans-serif;
       cursor:pointer;line-height:1.5;text-align:center;">
-      <span style="font-size:${isPast ? '13px' : '16px'};font-weight:900;">${wd.labels[0]}〜${wd.labels[2]}</span>
+      <span style="font-size:13px;font-weight:900;">${wd.labels[0]}〜${wd.labels[2]}</span>
       <br><span style="font-size:12px;font-weight:500;color:${deadlineColor};">${deadlineText}</span>
       ${isPast ? `<br><span style="font-size:11px;font-weight:700;color:${active ? '#fff' : '#e05252'};">⚠️ 締切済み（受付中）</span>` : ''}
     </button>`;
