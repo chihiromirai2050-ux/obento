@@ -1472,6 +1472,7 @@ function selectOrdersWeek(wk) {
 }
 
 function renderOrdersTable() {
+
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
 
@@ -1498,16 +1499,13 @@ function renderOrdersTable() {
     (o.weekLabel || 'その他') === ordersActiveWeek &&
     ((o.tue && String(o.tue).trim()) || (o.thu && String(o.thu).trim()) || (o.fri && String(o.fri).trim()))
   );
-
   if (!rows.length) {
     wrap.innerHTML = tabs + `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">この週の注文はありません</div>`;
     return;
   }
-
   const cell = v => v && String(v).trim()
     ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
     : `<span style="color:var(--text-light);">—</span>`;
-
   wrap.innerHTML = tabs + `
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12px;">
