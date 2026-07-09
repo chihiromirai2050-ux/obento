@@ -1442,12 +1442,14 @@ function loadOrdersTable() {
     .then(res => res.json())
     .then(data => {
       ordersAll = data.orders || [];
-      // 週ラベルごとにグループ化（新しい週が先頭に来るよう出現順を保持）
       ordersWeeks = [];
+    
       ordersAll.forEach(o => {
         const wk = o.weekLabel || 'その他';
         if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
       });
+      // 新しい週が先頭に来るよう並べ替え、最新3週分だけ残す
+      ordersWeeks = ordersWeeks.reverse().slice(0, 3);
       // 既に選ばれている週が無ければ先頭（最新）を選ぶ
       if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
         ordersActiveWeek = ordersWeeks[0] || null;
