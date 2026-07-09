@@ -1009,9 +1009,9 @@ function renderWeekTabs() {
       deadlineColor = active ? 'rgba(255,255,255,0.85)' : 'var(--orange-accent)';
     }
     return `<button onclick="selectWeek(${w.offset})" style="
-      flex:1;min-width:0;background:${active ? 'var(--orange-accent)' : 'var(--cream)'};
+      flex:1;min-width:0;background:${active ? 'var(--green-deep)' : 'var(--cream)'};
       color:${active ? '#fff' : 'var(--text-mid)'};
-      border:1.5px solid ${active ? 'var(--orange-accent)' : 'rgba(26,61,43,0.12)'};
+      border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
       border-radius:12px;padding:10px 8px;font-family:'Noto Sans JP',sans-serif;
       font-size:12px;font-weight:700;cursor:pointer;line-height:1.4;white-space:nowrap;">
       ${wd.labels[0]}〜${wd.labels[2]}
@@ -1029,15 +1029,16 @@ let currentTab = 'tuethu'; // 'mon' or 'tuethu'
 
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tab-tuethu').style.background = tab === 'tuethu' ? 'var(--green-deep)' : '#eee';
+  document.getElementById('tab-tuethu').style.background = tab === 'tuethu' ? 'var(--green-mid)' : '#eee';
   document.getElementById('tab-tuethu').style.color = tab === 'tuethu' ? '#fff' : 'var(--text-mid)';
-  document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-deep)' : '#eee';
+  document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-mid)' : '#eee';
   document.getElementById('tab-fri').style.color = tab === 'fri' ? '#fff' : 'var(--text-mid)';
   document.getElementById('menu-section-label').textContent = tab === 'fri' ? 'おひさまkitchen🏠' : '隆ちゃん弁当🏠';
   renderMenuArea();
   // メニューセクション上部にスクロール
   document.querySelector('.menu-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 
 function renderMenuArea() {
   const OKAZU_COLORS = ['#e8a099','#e8b899','#e8cc99','#dda899','#e8a0ad','#dda899','#e8bc99'];
