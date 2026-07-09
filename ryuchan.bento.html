@@ -1009,9 +1009,9 @@ function renderWeekTabs() {
       deadlineColor = active ? 'rgba(255,255,255,0.85)' : 'var(--orange-accent)';
     }
     return `<button onclick="selectWeek(${w.offset})" style="
-      flex:1;min-width:0;background:${active ? 'var(--green-deep)' : 'var(--cream)'};
+      flex:1;min-width:0;background:${active ? 'var(--orange-accent)' : 'var(--cream)'};
       color:${active ? '#fff' : 'var(--text-mid)'};
-      border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
+      border:1.5px solid ${active ? 'var(--orange-accent)' : 'rgba(26,61,43,0.12)'};
       border-radius:12px;padding:10px 8px;font-family:'Noto Sans JP',sans-serif;
       font-size:12px;font-weight:700;cursor:pointer;line-height:1.4;white-space:nowrap;">
       ${wd.labels[0]}〜${wd.labels[2]}
