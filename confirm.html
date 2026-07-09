@@ -435,7 +435,7 @@ async function loadOrders(force = false) {
   try {
     if (GAS_URL === 'YOUR_GAS_URL_HERE') throw new Error('GAS_URLを設定してください');
 
-    const res = await fetch(GAS_URL, { cache: force ? 'no-cache' : 'force-cache' });
+    const res = await fetch(GAS_URL, { cache: 'no-cache' });
     const json = await res.json();
     allOrders = json.orders || [];
     // デフォルトを最新週に設定
