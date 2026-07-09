@@ -1498,6 +1498,29 @@ function resetForm() {
 }
 
 // ── Init ──────────────────────────
+// 最初に選ぶ週を「締め切りがまだ過ぎていない一番近い週」にする
+(function setInitialWeek() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  let chosen = null;
+  for (const w of WEEK_OPTIONS) {
+    const iso = getWeekDates(w.offset).isos[0];
+    const [y, m, d] = iso.split('-').map(Number);
+    const tue = new Date(y, m - 1, d);
+    const deadline = new Date(tue);
+    deadline.setDate(tue.getDate() - 6);
+    deadline.setHours(23, 59, 59, 999);
+    if (now <= deadline) { chosen = w.offset; break; } // 締め切り前の最初の週
+  }
+  // 全部締め切り済みなら一番先の週
+  if (chosen === null) chosen = WEEK_OPTIONS[WEEK_OPTIONS.length - 1].offset;
+  currentWeekOffset = chosen;
+  const wk = getWeekDates(chosen);
+  dates = wk.labels;
+  dateISOs = wk.isos;
+  recalcClosedDays();
+})();
+
 renderWeekTabs();
 renderMenuArea();
 renderDays();
