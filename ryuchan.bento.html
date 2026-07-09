@@ -1604,15 +1604,12 @@ function selectOrdersWeek(wk) {
 }
 
 function renderOrdersTable() {
-
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
-
   if (!ordersWeeks.length) {
     wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
     return;
   }
-
   // 週切り替えボタン
   const tabs = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
@@ -1640,25 +1637,26 @@ function renderOrdersTable() {
     : `<span style="color:var(--text-light);">—</span>`;
   wrap.innerHTML = tabs + `
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-      <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12px;">
+      <table style="border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-size:12px;">
         <thead>
-          <tr style="background:var(--green-deep);color:#fff;">
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">氏名</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">自己負担合計</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">火曜</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">木曜</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">金曜</th>
+          <tr style="color:#fff;">
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);position:sticky;left:0;z-index:2;">氏名</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">自己負担合計</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">火曜</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">木曜</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">金曜</th>
           </tr>
         </thead>
         <tbody>
           ${rows.map((o, i) => {
             const share = Number(o.total) || 0;
-            return `<tr style="background:${i % 2 ? 'var(--cream)' : '#fff'};border-bottom:1px solid rgba(26,61,43,0.06);">
-              <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;">${o.name || ''}</td>
-              <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥${share.toLocaleString()}</td>
-              <td style="padding:10px 12px;">${cell(o.tue)}</td>
-              <td style="padding:10px 12px;">${cell(o.thu)}</td>
-              <td style="padding:10px 12px;">${cell(o.fri)}</td>
+            const bg = i % 2 ? 'var(--cream)' : '#fff';
+            return `<tr style="border-bottom:1px solid rgba(26,61,43,0.06);">
+              <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;background:${bg};position:sticky;left:0;z-index:1;box-shadow:2px 0 4px rgba(26,61,43,0.06);">${o.name || ''}</td>
+              <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;background:${bg};">¥${share.toLocaleString()}</td>
+              <td style="padding:10px 12px;background:${bg};">${cell(o.tue)}</td>
+              <td style="padding:10px 12px;background:${bg};">${cell(o.thu)}</td>
+              <td style="padding:10px 12px;background:${bg};">${cell(o.fri)}</td>
             </tr>`;
           }).join('')}
         </tbody>
