@@ -1525,12 +1525,7 @@ function renderOrdersTable() {
       </table>
     </div>`;
 }
-    .catch(() => {
-      wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
-    });
-}
 loadOrdersTable();
-
 document.getElementById('target-week').textContent =
   `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
 </script>
