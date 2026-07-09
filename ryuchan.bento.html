@@ -1462,10 +1462,6 @@ function loadOrdersTable() {
 function selectOrdersWeek(wk) {
   ordersActiveWeek = wk;
   renderOrdersTable();
-})
-    .catch(() => {
-      wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
-    });
 }
 
 function renderOrdersTable() {
