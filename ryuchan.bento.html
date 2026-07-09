@@ -648,6 +648,17 @@
 <!-- MAIN -->
 <main class="main" id="form-area">
 
+<!-- 注文一覧表 -->
+  <div class="orders-table-section fade-in" style="background:var(--warm-white);border-radius:18px;padding:20px 16px;margin-bottom:28px;box-shadow:0 4px 24px rgba(26,61,43,0.10);border:1px solid rgba(26,61,43,0.06);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+      <div class="section-label" style="margin-bottom:0;">📋 みんなの注文一覧</div>
+      <button onclick="loadOrdersTable()" style="background:var(--cream);border:1.5px solid rgba(26,61,43,0.12);border-radius:100px;padding:6px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;color:var(--green-mid);cursor:pointer;">↻ 更新</button>
+    </div>
+    <div id="orders-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>
+    </div>
+  </div>
+
   <!-- 氏名 -->
   <div class="name-section fade-in">
     <div class="section-label">お名前 *</div>
@@ -1417,6 +1428,53 @@ updateAll();
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
   document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(displayWed)}(水) 23:59`;
 })();
+
+// ── 注文一覧表 ──────────────────────────
+function loadOrdersTable() {
+  const wrap = document.getElementById('orders-table-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>`;
+  fetch(GAS_URL)
+    .then(res => res.json())
+    .then(data => {
+      const orders = data.orders || [];
+      if (!orders.length) {
+        wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
+        return;
+      }
+      wrap.innerHTML = `
+        <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12px;">
+          <thead>
+            <tr style="background:var(--green-deep);color:#fff;">
+              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">氏名</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">自己負担合計</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">火曜</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">木曜</th>
+              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">金曜</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.map((o, i) => {
+              const cell = v => v && String(v).trim()
+                ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
+                : `<span style="color:var(--text-light);">—</span>`;
+              const share = Number(o.totalShare) || 0;
+              return `<tr style="background:${i % 2 ? 'var(--cream)' : '#fff'};border-bottom:1px solid rgba(26,61,43,0.06);">
+                <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;">${o.name || ''}</td>
+                <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥${share.toLocaleString()}</td>
+                <td style="padding:10px 12px;">${cell(o.tue)}</td>
+                <td style="padding:10px 12px;">${cell(o.thu)}</td>
+                <td style="padding:10px 12px;">${cell(o.fri)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+    })
+    .catch(() => {
+      wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
+    });
+}
+loadOrdersTable();
 
 document.getElementById('target-week').textContent =
   `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
