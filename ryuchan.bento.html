@@ -985,6 +985,12 @@ function renderWeekTabs() {
   box.innerHTML = WEEK_OPTIONS.map(w => {
     const active = w.offset === currentWeekOffset;
     const wd = getWeekDates(w.offset);
+    // 締め切り＝その週の火曜の6日前（前週の水曜）
+    const [y, m, d] = wd.isos[0].split('-').map(Number);
+    const tue = new Date(y, m - 1, d);
+    const deadline = new Date(tue);
+    deadline.setDate(tue.getDate() - 6);
+    const dl = `${deadline.getMonth()+1}/${deadline.getDate()}`;
     return `<button onclick="selectWeek(${w.offset})" style="
       flex:1;min-width:0;background:${active ? 'var(--green-deep)' : 'var(--cream)'};
       color:${active ? '#fff' : 'var(--text-mid)'};
@@ -992,6 +998,7 @@ function renderWeekTabs() {
       border-radius:12px;padding:10px 8px;font-family:'Noto Sans JP',sans-serif;
       font-size:12px;font-weight:700;cursor:pointer;line-height:1.4;white-space:nowrap;">
       ${wd.labels[0]}〜${wd.labels[2]}
+      <br><span style="font-size:10px;font-weight:500;color:${active ? 'rgba(255,255,255,0.85)' : 'var(--orange-accent)'};">締切 ${dl}(水)</span>
     </button>`;
   }).join('');
 }
