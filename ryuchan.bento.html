@@ -1029,9 +1029,9 @@ let currentTab = 'tuethu'; // 'mon' or 'tuethu'
 
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tab-tuethu').style.background = tab === 'tuethu' ? 'var(--green-mid)' : '#eee';
+  document.getElementById('tab-tuethu').style.background = tab === 'tuethu' ? 'var(--green-bright)' : '#eee';
   document.getElementById('tab-tuethu').style.color = tab === 'tuethu' ? '#fff' : 'var(--text-mid)';
-  document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-mid)' : '#eee';
+  document.getElementById('tab-fri').style.background = tab === 'fri' ? 'var(--green-bright)' : '#eee';
   document.getElementById('tab-fri').style.color = tab === 'fri' ? '#fff' : 'var(--text-mid)';
   document.getElementById('menu-section-label').textContent = tab === 'fri' ? 'おひさまkitchen🏠' : '隆ちゃん弁当🏠';
   renderMenuArea();
