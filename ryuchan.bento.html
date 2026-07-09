@@ -1429,7 +1429,11 @@ updateAll();
   document.getElementById('deadline-chip').textContent = `⏰ 締め切り：${fmt(displayWed)}(水) 23:59`;
 })();
 
-// ── 注文一覧表 ──────────────────────────
+// ── 注文一覧表（週切り替え付き）──────────────────────────
+let ordersAll = [];
+let ordersWeeks = [];
+let ordersActiveWeek = null;
+
 function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
@@ -1437,41 +1441,94 @@ function loadOrdersTable() {
   fetch(GAS_URL)
     .then(res => res.json())
     .then(data => {
-      const orders = data.orders || [];
-      const filtered = orders.filter(o => (o.tue && String(o.tue).trim()) || (o.thu && String(o.thu).trim()) || (o.fri && String(o.fri).trim()));
-      
-      if (!filtered.length) {
-        wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
-        return;
+      ordersAll = data.orders || [];
+      // 週ラベルごとにグループ化（新しい週が先頭に来るよう出現順を保持）
+      ordersWeeks = [];
+      ordersAll.forEach(o => {
+        const wk = o.weekLabel || 'その他';
+        if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
+      });
+      // 既に選ばれている週が無ければ先頭（最新）を選ぶ
+      if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
+        ordersActiveWeek = ordersWeeks[0] || null;
       }
-      wrap.innerHTML = `
-        <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12px;">
-          <thead>
-            <tr style="background:var(--green-deep);color:#fff;">
-              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">氏名</th>
-              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">自己負担合計</th>
-              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">火曜</th>
-              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">木曜</th>
-              <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">金曜</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${filtered.map((o, i) => {
-              const cell = v => v && String(v).trim()
-                ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
-                : `<span style="color:var(--text-light);">—</span>`;
-              const share = Number(o.totalShare) || 0;
-              return `<tr style="background:${i % 2 ? 'var(--cream)' : '#fff'};border-bottom:1px solid rgba(26,61,43,0.06);">
-                <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;">${o.name || ''}</td>
-                <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥${share.toLocaleString()}</td>
-                <td style="padding:10px 12px;">${cell(o.tue)}</td>
-                <td style="padding:10px 12px;">${cell(o.thu)}</td>
-                <td style="padding:10px 12px;">${cell(o.fri)}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>`;
+      renderOrdersTable();
     })
+    .catch(() => {
+      wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
+    });
+}
+
+function selectOrdersWeek(wk) {
+  ordersActiveWeek = wk;
+  renderOrdersTable();
+}
+
+function renderOrdersTable() {
+  const wrap = document.getElementById('orders-table-wrap');
+  if (!wrap) return;
+
+  if (!ordersWeeks.length) {
+    wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
+    return;
+  }
+
+  // 週切り替えボタン
+  const tabs = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+      ${ordersWeeks.map(wk => {
+        const active = wk === ordersActiveWeek;
+        return `<button onclick="selectOrdersWeek('${wk}')" style="
+          background:${active ? 'var(--green-deep)' : 'var(--cream)'};
+          color:${active ? '#fff' : 'var(--text-mid)'};
+          border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
+          border-radius:100px;padding:6px 14px;font-family:'Noto Sans JP',sans-serif;
+          font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${wk}</button>`;
+      }).join('')}
+    </div>`;
+
+  // 選んだ週の、注文がある人だけ
+  const rows = ordersAll.filter(o =>
+    (o.weekLabel || 'その他') === ordersActiveWeek &&
+    ((o.tue && String(o.tue).trim()) || (o.thu && String(o.thu).trim()) || (o.fri && String(o.fri).trim()))
+  );
+
+  if (!rows.length) {
+    wrap.innerHTML = tabs + `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">この週の注文はありません</div>`;
+    return;
+  }
+
+  const cell = v => v && String(v).trim()
+    ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
+    : `<span style="color:var(--text-light);">—</span>`;
+
+  wrap.innerHTML = tabs + `
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+      <table style="border-collapse:collapse;width:100%;min-width:640px;font-size:12px;">
+        <thead>
+          <tr style="background:var(--green-deep);color:#fff;">
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">氏名</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">自己負担合計</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">火曜</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">木曜</th>
+            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;">金曜</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((o, i) => {
+            const share = Number(o.totalShare) || 0;
+            return `<tr style="background:${i % 2 ? 'var(--cream)' : '#fff'};border-bottom:1px solid rgba(26,61,43,0.06);">
+              <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;">${o.name || ''}</td>
+              <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;">¥${share.toLocaleString()}</td>
+              <td style="padding:10px 12px;">${cell(o.tue)}</td>
+              <td style="padding:10px 12px;">${cell(o.thu)}</td>
+              <td style="padding:10px 12px;">${cell(o.fri)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
     .catch(() => {
       wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
     });
