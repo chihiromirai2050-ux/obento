@@ -1572,27 +1572,37 @@ let ordersActiveWeek = null;
 function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
-  wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>`;
-  fetch(GAS_URL, { cache: 'no-cache' })
+  // すでに表示中なら「読み込み中…」で消さず、そのまま裏で更新する
+  const hasData = ordersAll && ordersAll.length > 0;
+  if (!hasData) {
+    wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…</div>`;
+  }
+  const refreshBtn = document.getElementById('orders-refresh-btn');
+  if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '更新中…'; }
+  // キャッシュを完全に無視して最新を取得（?_=時刻 + no-store）
+  const url = GAS_URL + (GAS_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
+  fetch(url, { cache: 'no-store' })
     .then(res => res.json())
     .then(data => {
       ordersAll = data.orders || [];
       ordersWeeks = [];
-    
       ordersAll.forEach(o => {
         const wk = o.weekLabel || 'その他';
         if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
       });
-      // 新しい週が先頭に来るよう並べ替え、最新3週分だけ残す
       ordersWeeks = ordersWeeks.reverse().slice(0, 3);
-      // 既に選ばれている週が無ければ先頭（最新）を選ぶ
       if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
         ordersActiveWeek = ordersWeeks[0] || null;
       }
       renderOrdersTable();
     })
     .catch(() => {
-      wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
+      if (!hasData) {
+        wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
+      }
+    })
+    .finally(() => {
+      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
     });
 }
 
@@ -1662,8 +1672,7 @@ function renderOrdersTable() {
     </div>`;
 }
 
-// 一覧の開閉（初めて開いたときにデータを読み込む）
-let ordersTableLoaded = false;
+// 一覧の開閉（開くたびに最新へ更新）
 function toggleOrdersTable() {
   const panel = document.getElementById('orders-table-panel');
   const arrow = document.getElementById('orders-toggle-arrow');
@@ -1674,18 +1683,23 @@ function toggleOrdersTable() {
     if (arrow) arrow.style.transform = 'rotate(0deg)';
     if (refreshBtn) refreshBtn.style.display = 'none';
   } else {
-    panel.style.display = 'block';
+    panel.style.display = 'block';               // ← 表示は一瞬で開く
     if (arrow) arrow.style.transform = 'rotate(180deg)';
     if (refreshBtn) refreshBtn.style.display = 'inline-block';
-    if (!ordersTableLoaded) {
-      ordersTableLoaded = true;
-      loadOrdersTable();
-    }
+    loadOrdersTable();                            // ← 開くたびに最新へ（裏で更新）
   }
 }
-
 document.getElementById('target-week').textContent =
   `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
+
+// ── 追加：先読み & 復帰時の自動更新 ──────────────
+// ページを開いた時点で裏側で先読み（開いた瞬間に表示できるように）
+loadOrdersTable();
+// スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
+window.addEventListener('pageshow', function (e) {
+  if (e.persisted) loadOrdersTable();
+});
+  
 </script>
 </body>
 </html>
