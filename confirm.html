@@ -438,11 +438,10 @@ async function loadOrders(force = false) {
     const res = await fetch(GAS_URL, { cache: 'no-cache' });
     const json = await res.json();
     allOrders = json.orders || [];
-    // デフォルトを最新週に設定
-    // 最新の送信日時を持つweekLabelをデフォルトに
-    if (allOrders.length > 0) {
-      const latest = allOrders[allOrders.length - 1];
-      selectedWeek = latest.weekLabel || null;
+    // 過去3週間分のうち、いちばん新しい週を最初に表示
+    const weeks = getWeeks();
+    if (!selectedWeek || !weeks.includes(selectedWeek)) {
+      selectedWeek = weeks.length ? weeks[weeks.length - 1] : null;
     }
 
     renderAll();
@@ -464,17 +463,13 @@ function renderAll() {
 }
 
 function getWeeks() {
-  const weeks = new Set();
-  allOrders.forEach(o => { if (o.weekLabel) weeks.add(o.weekLabel); });
-  return [...weeks].sort((a, b) => {
-    // "3/17(月)・..." から最初の日付をパース
-    const parseDate = s => {
-      const m = s.match(/(\d+)\/(\d+)/);
-      if (!m) return 0;
-      return parseInt(m[1]) * 100 + parseInt(m[2]);
-    };
-    return parseDate(b) - parseDate(a);
+  // データに出てきた順で週ラベルを集める
+  const weeks = [];
+  allOrders.forEach(o => {
+    if (o.weekLabel && !weeks.includes(o.weekLabel)) weeks.push(o.weekLabel);
   });
+  // 新しい週が後ろに来る前提で、新しい3週分だけ残し、古い順（左→右）に並べる
+  return weeks.slice(-3);
 }
 
 function getFilteredOrders() {
@@ -482,37 +477,19 @@ function getFilteredOrders() {
   return allOrders.filter(o => o.weekLabel === selectedWeek);
 }
 
-let weekFilterOpen = false;
-
 function renderWeekFilter() {
   const bar = document.getElementById('filter-bar');
   const weeks = getWeeks();
   bar.innerHTML = '';
 
-  // 選択中の週ラベルを取得
-  const selectedLabel = selectedWeek || '週を選択';
-
-  // トグルボタン
-  const toggle = document.createElement('button');
-  toggle.className = 'week-chip active';
-  toggle.style.cssText = 'display:flex;align-items:center;gap:6px;';
-  toggle.innerHTML = `<span>${selectedLabel}</span><span style="font-size:11px;">${weekFilterOpen ? '▲' : '▼'}</span>`;
-  toggle.onclick = () => { weekFilterOpen = !weekFilterOpen; renderWeekFilter(); };
-  bar.appendChild(toggle);
-
-  // 展開時のみ週一覧を表示
-  if (weekFilterOpen) {
-    const list = document.createElement('div');
-    list.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;width:100%;';
-    weeks.forEach(w => {
-      const btn = document.createElement('button');
-      btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
-      btn.textContent = w;
-      btn.onclick = () => { selectedWeek = w; weekFilterOpen = false; renderAll(); };
-      list.appendChild(btn);
-    });
-    bar.appendChild(list);
-  }
+  // 週タブを最初から横に並べる（注文フォームと同じ形）
+  weeks.forEach(w => {
+    const btn = document.createElement('button');
+    btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
+    btn.textContent = w;
+    btn.onclick = () => { selectedWeek = w; renderAll(); };
+    bar.appendChild(btn);
+  });
 }
 
 function renderStats() {
