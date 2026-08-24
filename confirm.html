@@ -423,6 +423,12 @@ if (new URLSearchParams(window.location.search).get('ordered') === '1') {
 
 let allOrders = [];
 let selectedWeek = null;
+let allOrders = [];
+let selectedWeek = null;
+// 注文フォームから引き継いだ「注文した人」と「注文した週」
+const params = new URLSearchParams(window.location.search);
+const justOrderedName = params.get('name') || null;
+const justOrderedWeek = params.get('week') || null;
 
 async function loadOrders(force = false) {
   const btn = document.getElementById('refresh-btn');
@@ -443,10 +449,14 @@ async function loadOrders(force = false) {
     const res = await fetch(url, { cache: 'no-store' });
     const json = await res.json();
     allOrders = json.orders || [];
-    // 過去3週間分のうち、いちばん新しい週を最初に表示
-    const weeks = getWeeks();
+        const weeks = getWeeks();
     if (!selectedWeek || !weeks.includes(selectedWeek)) {
-      selectedWeek = weeks.length ? weeks[weeks.length - 1] : null;
+      // 注文フォームから来た場合はその週を、なければ最新週を最初に表示
+      if (justOrderedWeek && weeks.includes(justOrderedWeek)) {
+        selectedWeek = justOrderedWeek;
+      } else {
+        selectedWeek = weeks.length ? weeks[weeks.length - 1] : null;
+      }
     }
 
     renderAll();
@@ -536,18 +546,27 @@ function renderTable() {
 
   // 最新順に表示
   const sorted = [...orders].reverse();
-  tbody.innerHTML = sorted.map(o => `
-    <tr>
+  tbody.innerHTML = sorted.map(o => {
+    // 注文フォームから来た本人の行は目立たせる
+    const isMine = justOrderedName && o.name === justOrderedName
+      && (o.weekLabel || null) === selectedWeek;
+    return `
+    <tr class="${isMine ? 'highlight' : ''}" ${isMine ? 'id="my-order-row"' : ''}>
       <td class="name-cell">${o.name}</td>
       <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
       <td class="menu-cell">${menuCell(o.tue)}</td>
       <td class="menu-cell">${menuCell(o.thu)}</td>
       <td class="menu-cell">${menuCell(o.fri)}</td>
       <td class="ts-cell">${o.ts}</td>
-    </tr>
-  `).join('');
-}
+    </tr>`;
+  }).join('');
 
+  // 本人の行までスクロール
+  const mine = document.getElementById('my-order-row');
+  if (mine) {
+    setTimeout(() => mine.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+  }
+}
 // スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
 window.addEventListener('pageshow', function (e) {
   if (e.persisted) loadOrders();
