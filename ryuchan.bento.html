@@ -1590,7 +1590,7 @@ function loadOrdersTable() {
         const wk = o.weekLabel || 'その他';
         if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
       });
-      ordersWeeks = ordersWeeks.reverse().slice(0, 3);
+      ordersWeeks = ordersWeeks.reverse().slice(0, 3).reverse();
       if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
         ordersActiveWeek = ordersWeeks[0] || null;
       }
