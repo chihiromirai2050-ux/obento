@@ -1489,8 +1489,11 @@ function handleSubmit() {
   }
 
   // 注文完了後、確認ページへリダイレクト（プリフェッチの時間を確保）
+  // 誰が・どの週を注文したかを確認ページへ引き継ぐ
+  const okName = encodeURIComponent(nameEl.value);
+  const okWeek = encodeURIComponent(`${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`);
   setTimeout(() => {
-    window.location.href = 'confirm.html?ordered=1';
+    window.location.href = `confirm.html?ordered=1&name=${okName}&week=${okWeek}`;
   }, 1200);
 }
 
