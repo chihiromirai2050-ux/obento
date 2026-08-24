@@ -1622,7 +1622,39 @@ function renderOrdersTable() {
     wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">まだ注文がありません</div>`;
     return;
   }
-  // 週切り替えボタン
+
+  // 週ラベルから火・木・金の日付(M/D)を取り出す。金曜が欠けていれば木曜+1日で補う。
+  const parseWeek = (raw) => {
+    const tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
+    const thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
+    let fri = (raw.match(/(\d+\/\d+)\(金\)/) || [])[1] || null;
+    if (!fri && thu) {
+      const [mm, dd] = thu.split('/').map(Number);
+      const d = new Date(new Date().getFullYear(), mm - 1, dd + 1);
+      fri = `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    return { 火: tue, 木: thu, 金: fri };
+  };
+
+  // M/D が休業日(CLOSED_DATES)かどうか。年は「今年」を基準に判定する。
+  const isClosedMD = (md) => {
+    if (!md) return true; // 日付が拾えない曜日は無いものとして扱う
+    const [m, d] = md.split('/').map(Number);
+    const y = new Date().getFullYear();
+    const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    return CLOSED_DATES.includes(iso);
+  };
+
+  // 週切り替えボタン（お休みの曜日を除いた3日を表示）
+  const labelFor = (raw) => {
+    const w = parseWeek(raw);
+    const parts = [];
+    if (w.火 && !isClosedMD(w.火)) parts.push(`${w.火}(火)`);
+    if (w.木 && !isClosedMD(w.木)) parts.push(`${w.木}(木)`);
+    if (w.金 && !isClosedMD(w.金)) parts.push(`${w.金}(金)`);
+    return parts.length ? parts.join('・') : raw;
+  };
+
   const tabs = `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
       ${ordersWeeks.map(wk => {
@@ -1632,9 +1664,10 @@ function renderOrdersTable() {
           color:${active ? '#fff' : 'var(--text-mid)'};
           border:1.5px solid ${active ? 'var(--green-deep)' : 'rgba(26,61,43,0.12)'};
           border-radius:100px;padding:6px 14px;font-family:'Noto Sans JP',sans-serif;
-          font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${wk}</button>`;
+          font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">${labelFor(wk)}</button>`;
       }).join('')}
     </div>`;
+
   // 選んだ週の、注文がある人だけ
   const rows = ordersAll.filter(o =>
     (o.weekLabel || 'その他') === ordersActiveWeek &&
@@ -1644,9 +1677,17 @@ function renderOrdersTable() {
     wrap.innerHTML = tabs + `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">この週の注文はありません</div>`;
     return;
   }
+
+  // この週でお休みの曜日を判定し、その列は表示しない
+  const wk = parseWeek(ordersActiveWeek);
+  const showTue = !isClosedMD(wk.火);
+  const showThu = !isClosedMD(wk.木);
+  const showFri = !isClosedMD(wk.金);
+
   const cell = v => v && String(v).trim()
     ? `<span style="display:inline-block;background:var(--green-pale);border-radius:6px;padding:4px 10px;font-weight:500;color:var(--green-deep);white-space:nowrap;">${v}</span>`
     : `<span style="color:var(--text-light);">—</span>`;
+
   wrap.innerHTML = tabs + `
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table style="border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-size:12px;">
@@ -1654,9 +1695,9 @@ function renderOrdersTable() {
           <tr style="color:#fff;">
             <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);position:sticky;left:0;z-index:2;">氏名</th>
             <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">自己負担合計</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">火曜</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">木曜</th>
-            <th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">金曜</th>
+            ${showTue ? `<th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">火曜</th>` : ''}
+            ${showThu ? `<th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">木曜</th>` : ''}
+            ${showFri ? `<th style="padding:10px 12px;text-align:left;font-weight:700;white-space:nowrap;background:var(--green-deep);">金曜</th>` : ''}
           </tr>
         </thead>
         <tbody>
@@ -1666,9 +1707,9 @@ function renderOrdersTable() {
             return `<tr style="border-bottom:1px solid rgba(26,61,43,0.06);">
               <td style="padding:10px 12px;font-weight:700;color:var(--text-dark);white-space:nowrap;background:${bg};position:sticky;left:0;z-index:1;box-shadow:2px 0 4px rgba(26,61,43,0.06);">${o.name || ''}</td>
               <td style="padding:10px 12px;font-weight:900;color:var(--orange-accent);white-space:nowrap;background:${bg};">¥${share.toLocaleString()}</td>
-              <td style="padding:10px 12px;background:${bg};">${cell(o.tue)}</td>
-              <td style="padding:10px 12px;background:${bg};">${cell(o.thu)}</td>
-              <td style="padding:10px 12px;background:${bg};">${cell(o.fri)}</td>
+              ${showTue ? `<td style="padding:10px 12px;background:${bg};">${cell(o.tue)}</td>` : ''}
+              ${showThu ? `<td style="padding:10px 12px;background:${bg};">${cell(o.thu)}</td>` : ''}
+              ${showFri ? `<td style="padding:10px 12px;background:${bg};">${cell(o.fri)}</td>` : ''}
             </tr>`;
           }).join('')}
         </tbody>
