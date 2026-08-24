@@ -208,6 +208,20 @@
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(82,183,136,0.04); }
   tbody tr.highlight { background: rgba(82,183,136,0.08); }
+  /* 「あなたの注文」バッジ */
+  .you-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--orange-accent);
+    padding: 2px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
   td {
     padding: 12px 14px;
     vertical-align: top;
@@ -569,7 +583,7 @@ function renderTable() {
       && (o.weekLabel || null) === selectedWeek;
     return `
     <tr class="${isMine ? 'highlight' : ''}" ${isMine ? 'id="my-order-row"' : ''}>
-      <td class="name-cell">${o.name || ''}</td>
+      <td class="name-cell">${o.name || ''}${isMine ? '<span class="you-badge">あなたの注文</span>' : ''}</td>
       <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
       <td class="menu-cell">${menuCell(o.tue, closedTue)}</td>
       <td class="menu-cell">${menuCell(o.thu, closedThu)}</td>
