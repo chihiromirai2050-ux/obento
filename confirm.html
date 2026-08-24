@@ -349,9 +349,6 @@
   <!-- メインコンテンツ -->
   <div id="main-content" style="display:none">
 
-    <!-- 統計 -->
-
-
     <!-- 週フィルター -->
     <div class="filter-bar fade-in" id="filter-bar">
 
@@ -390,36 +387,22 @@
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJYJXs_LFockYhkWHxIr-4_j9bDXIv2yaytrEwTiGJhnPEoKHjmouHcFPKa2azEhL7/exec';
 
-// 翌週の月火木ラベルを生成
-function getNextWeekLabel() {
-  const today = new Date();
-  const dow = today.getDay();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - dow);
-  const thisWed = new Date(startOfWeek);
-  thisWed.setDate(startOfWeek.getDate() + 3);
-  thisWed.setHours(23, 59, 59, 999);
-  const weeksAhead = today > thisWed ? 2 : 1;
-  const daysToMon = dow === 0 ? 1 : (8 - dow) % 7 || 7;
-  const mon = new Date(today); mon.setDate(today.getDate() + daysToMon + (weeksAhead - 1) * 7);
-  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
-  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
-  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
-  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  // 6/1以降は火・木・金
-  const isNewSchedule = mon.getMonth() > 4 || (mon.getMonth() === 5 && mon.getDate() >= 1);
-  if (isNewSchedule) {
-    return `${fmt(tue)}(火)・${fmt(thu)}(木)・${fmt(fri)}(金)`;
-  }
-  return `${fmt(tue)}(火)・${fmt(thu)}(木)`;
-}
+// 休業日（提供なし）の日付。注文フォームと同じ内容にしておく
+const CLOSED_DATES = [
+  '2026-04-03',
+  '2025-05-01',
+  '2026-06-01',
+  '2026-07-24',
+  '2026-08-13',
+  '2026-08-14',
+  '2026-10-12',
+  '2026-12-31',
+  '2027-01-01',
+  '2027-01-02',
+];
 
-document.getElementById('header-week').textContent = '📅 ' + getNextWeekLabel();
-
-// 注文完了後のリダイレクト時にバナーを表示
-if (new URLSearchParams(window.location.search).get('ordered') === '1') {
-
-}
+// 上部バナー：今選んでいる週を表示（データ取得後に更新される）
+document.getElementById('header-week').textContent = '📅 読み込み中…';
 
 let allOrders = [];
 let selectedWeek = null;
@@ -443,11 +426,13 @@ async function loadOrders(force = false) {
   try {
     if (GAS_URL === 'YOUR_GAS_URL_HERE') throw new Error('GAS_URLを設定してください');
 
+    // キャッシュを完全に無視して最新を取得
     const url = GAS_URL + (GAS_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
     const res = await fetch(url, { cache: 'no-store' });
     const json = await res.json();
     allOrders = json.orders || [];
-        const weeks = getWeeks();
+
+    const weeks = getWeeks();
     if (!selectedWeek || !weeks.includes(selectedWeek)) {
       // 注文フォームから来た場合はその週を、なければ最新週を最初に表示
       if (justOrderedWeek && weeks.includes(justOrderedWeek)) {
@@ -461,7 +446,7 @@ async function loadOrders(force = false) {
 
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('main-content').style.display = '';
-  } catch(err) {
+  } catch (err) {
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('error-state').style.display = '';
     document.getElementById('error-msg').textContent = err.message;
@@ -471,8 +456,16 @@ async function loadOrders(force = false) {
 }
 
 function renderAll() {
+  updateHeaderWeek();
   renderWeekFilter();
   renderTable();
+}
+
+// 上部バナーを、今選んでいる週（提供なしの曜日を除いた表記）に更新
+function updateHeaderWeek() {
+  const el = document.getElementById('header-week');
+  if (!el) return;
+  el.textContent = '📅 ' + (selectedWeek ? labelForWeek(selectedWeek) : '注文はまだありません');
 }
 
 function getWeeks() {
@@ -490,6 +483,46 @@ function getFilteredOrders() {
   return allOrders.filter(o => o.weekLabel === selectedWeek);
 }
 
+// ── 週ラベルの日付を取り出す（金曜が欠けていれば火曜基準で補う）──
+function parseWeek(raw) {
+  let tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
+  let thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
+  let fri = (raw.match(/(\d+\/\d+)\(金\)/) || [])[1] || null;
+  const y = new Date().getFullYear();
+  const addDays = (md, n) => {
+    const [mm, dd] = md.split('/').map(Number);
+    const d = new Date(y, mm - 1, dd + n);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  };
+  if (tue) {
+    if (!thu) thu = addDays(tue, 2);
+    if (!fri) fri = addDays(tue, 3);
+  } else if (thu) {
+    if (!tue) tue = addDays(thu, -2);
+    if (!fri) fri = addDays(thu, 1);
+  }
+  return { 火: tue, 木: thu, 金: fri };
+}
+
+// M/D が休業日かどうか（今年を基準に判定）
+function isClosedMD(md) {
+  if (!md) return false;
+  const [m, d] = md.split('/').map(Number);
+  const y = new Date().getFullYear();
+  const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  return CLOSED_DATES.includes(iso);
+}
+
+// タブ・バナー用：お休みの曜日を除いた日付表記
+function labelForWeek(raw) {
+  const w = parseWeek(raw);
+  const parts = [];
+  if (w.火 && !isClosedMD(w.火)) parts.push(`${w.火}(火)`);
+  if (w.木 && !isClosedMD(w.木)) parts.push(`${w.木}(木)`);
+  if (w.金 && !isClosedMD(w.金)) parts.push(`${w.金}(金)`);
+  return parts.length ? parts.join('・') : raw;
+}
+
 function renderWeekFilter() {
   const bar = document.getElementById('filter-bar');
   const weeks = getWeeks();
@@ -499,37 +532,17 @@ function renderWeekFilter() {
   weeks.forEach(w => {
     const btn = document.createElement('button');
     btn.className = 'week-chip' + (selectedWeek === w ? ' active' : '');
-    btn.textContent = w;
+    btn.textContent = labelForWeek(w);
     btn.onclick = () => { selectedWeek = w; renderAll(); };
     bar.appendChild(btn);
   });
 }
 
-function renderStats() {
-  const orders = getFilteredOrders();
-  const totalPeople = new Set(orders.map(o => o.name)).size;
-  const totalAmount = orders.reduce((s, o) => s + (Number(o.total) || 0), 0);
-  const totalOrders = orders.length;
-
-  document.getElementById('stats-bar').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">注文件数</div>
-      <div class="stat-value">${totalOrders}<small>件</small></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">注文人数</div>
-      <div class="stat-value">${totalPeople}<small>名</small></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">自己負担合計</div>
-      <div class="stat-value">¥${totalAmount.toLocaleString()}</div>
-    </div>
-  `;
-}
-
-function menuCell(menuStr) {
+// セル表示：提供なしの曜日は「提供なし」、それ以外は注文があればタグ・なければ「—」
+function menuCell(menuStr, isClosed) {
+  if (isClosed) return '<span class="empty-cell">提供なし</span>';
   menuStr = menuStr ? String(menuStr) : '';
-  if (!menuStr) return '<span class="empty-cell">—</span>';
+  if (!menuStr.trim()) return '<span class="empty-cell">—</span>';
   return menuStr.split('・').map(m => `<span class="menu-tag">${m}</span>`).join('');
 }
 
@@ -542,6 +555,12 @@ function renderTable() {
     return;
   }
 
+  // この週でお休みの曜日を判定
+  const wk = selectedWeek ? parseWeek(selectedWeek) : { 火: null, 木: null, 金: null };
+  const closedTue = isClosedMD(wk.火);
+  const closedThu = isClosedMD(wk.木);
+  const closedFri = isClosedMD(wk.金);
+
   // 最新順に表示
   const sorted = [...orders].reverse();
   tbody.innerHTML = sorted.map(o => {
@@ -550,12 +569,12 @@ function renderTable() {
       && (o.weekLabel || null) === selectedWeek;
     return `
     <tr class="${isMine ? 'highlight' : ''}" ${isMine ? 'id="my-order-row"' : ''}>
-      <td class="name-cell">${o.name}</td>
+      <td class="name-cell">${o.name || ''}</td>
       <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
-      <td class="menu-cell">${menuCell(o.tue)}</td>
-      <td class="menu-cell">${menuCell(o.thu)}</td>
-      <td class="menu-cell">${menuCell(o.fri)}</td>
-      <td class="ts-cell">${o.ts}</td>
+      <td class="menu-cell">${menuCell(o.tue, closedTue)}</td>
+      <td class="menu-cell">${menuCell(o.thu, closedThu)}</td>
+      <td class="menu-cell">${menuCell(o.fri, closedFri)}</td>
+      <td class="ts-cell">${o.ts || ''}</td>
     </tr>`;
   }).join('');
 
@@ -565,10 +584,14 @@ function renderTable() {
     setTimeout(() => mine.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
   }
 }
+
 // スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
 window.addEventListener('pageshow', function (e) {
   if (e.persisted) loadOrders();
 });
+
+// ── 初回読み込み（これが抜けると「取得中…」のまま止まる）──
+loadOrders();
 </script>
 </body>
 </html>
