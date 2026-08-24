@@ -1624,18 +1624,27 @@ function renderOrdersTable() {
   }
 
   // 週ラベルから火・木・金の日付(M/D)を取り出す。金曜が欠けていれば木曜+1日で補う。
-  const parseWeek = (raw) => {
-    const tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
-    const thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
+    const parseWeek = (raw) => {
+    let tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
+    let thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
     let fri = (raw.match(/(\d+\/\d+)\(金\)/) || [])[1] || null;
-    if (!fri && thu) {
-      const [mm, dd] = thu.split('/').map(Number);
-      const d = new Date(new Date().getFullYear(), mm - 1, dd + 1);
-      fri = `${d.getMonth() + 1}/${d.getDate()}`;
+    const y = new Date().getFullYear();
+    const addDays = (md, n) => {
+      const [mm, dd] = md.split('/').map(Number);
+      const d = new Date(y, mm - 1, dd + n);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    };
+    // 火曜を基準に、抜けている木曜(火+2)・金曜(火+3)を補う
+    if (tue) {
+      if (!thu) thu = addDays(tue, 2);
+      if (!fri) fri = addDays(tue, 3);
+    } else if (thu) {
+      // 火曜が無い場合は木曜を基準にする
+      if (!tue) tue = addDays(thu, -2);
+      if (!fri) fri = addDays(thu, 1);
     }
     return { 火: tue, 木: thu, 金: fri };
   };
-
   // M/D が休業日(CLOSED_DATES)かどうか。年は「今年」を基準に判定する。
   const isClosedMD = (md) => {
     if (!md) return false;
