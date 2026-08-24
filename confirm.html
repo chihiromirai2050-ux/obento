@@ -207,7 +207,10 @@
   }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(82,183,136,0.04); }
-  tbody tr.highlight { background: rgba(82,183,136,0.08); }
+  /* 本人の行：オレンジの枠で囲む＋うっすらオレンジ背景 */
+  tbody tr.highlight td { background: var(--orange-light); border-top: 2px solid var(--orange-accent); border-bottom: 2px solid var(--orange-accent); }
+  tbody tr.highlight td:first-child { border-left: 2px solid var(--orange-accent); }
+  tbody tr.highlight td:last-child { border-right: 2px solid var(--orange-accent); }
   /* 「あなたの注文」バッジ */
   .you-badge {
     display: inline-block;
@@ -575,8 +578,16 @@ function renderTable() {
   const closedThu = isClosedMD(wk.木);
   const closedFri = isClosedMD(wk.金);
 
-  // 最新順に表示
-  const sorted = [...orders].reverse();
+  // 最新順に表示（これまで通り：最近注文した人が上）
+  let sorted = [...orders].reverse();
+
+  // 注文フォームから移動してきたときだけ、本人を一番上に持ってくる
+  if (justOrderedName) {
+    const mineRows = sorted.filter(o => o.name === justOrderedName && (o.weekLabel || null) === selectedWeek);
+    const others   = sorted.filter(o => !(o.name === justOrderedName && (o.weekLabel || null) === selectedWeek));
+    sorted = [...mineRows, ...others];
+  }
+
   tbody.innerHTML = sorted.map(o => {
     // 注文フォームから来た本人の行は目立たせる
     const isMine = justOrderedName && o.name === justOrderedName
@@ -592,7 +603,7 @@ function renderTable() {
     </tr>`;
   }).join('');
 
-  // 本人の行までスクロール
+  // 本人の行が画面に見えるよう軽くスクロール（先頭付近なので通常は不要だが念のため）
   const mine = document.getElementById('my-order-row');
   if (mine) {
     setTimeout(() => mine.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
