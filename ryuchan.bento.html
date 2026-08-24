@@ -1591,13 +1591,13 @@ function loadOrdersTable() {
         if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
       });
       ordersWeeks = ordersWeeks.reverse().slice(0, 3).reverse();
-      if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-  　// フォーム上部で選ばれている週（＝いま締め切りの週）を最初に表示する
-  　　const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
-  　　ordersActiveWeek = ordersWeeks.includes(targetWeek)
-    ? targetWeek
-    : (ordersWeeks[ordersWeeks.length - 1] || null); // 見つからなければ一番新しい週
-}
+            if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
+        // フォーム上部で選ばれている週（＝いま締め切りの週）を最初に表示する
+        const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
+        ordersActiveWeek = ordersWeeks.includes(targetWeek)
+          ? targetWeek
+          : (ordersWeeks[ordersWeeks.length - 1] || null); // 見つからなければ一番新しい週
+      }
       renderOrdersTable();
     })
     .catch(() => {
