@@ -611,12 +611,21 @@ function renderTable() {
 }
 
 // スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
+// スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
 window.addEventListener('pageshow', function (e) {
   if (e.persisted) loadOrders();
 });
 
 // ── 初回読み込み（これが抜けると「取得中…」のまま止まる）──
 loadOrders();
+
+// 注文直後にこのページへ来た場合、保存が反映されるまで少し待って再取得する
+// （フォーム→確認ページは「戻る」ではないので pageshow では拾えないため）
+if (justOrderedName) {
+  // 1.5秒後・3秒後にもう一度ずつ最新を取り直す（更新ボタンを押さなくても3日そろう）
+  setTimeout(() => loadOrders(), 1500);
+  setTimeout(() => loadOrders(), 3000);
+}
 </script>
 </body>
 </html>
