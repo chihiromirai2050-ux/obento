@@ -34,7 +34,7 @@
   .header {
     background: var(--green-deep);
     position: relative;
-    overflow: visible;
+    overflow: hidden;
   }
   .header::before {
     content: '';
@@ -127,7 +127,8 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
     border: 1px solid rgba(26,61,43,0.06);
-    overflow: hidden;
+    /* ★ overflow:hidden を visible に。これがないと氏名セルの sticky（左固定）が効かない */
+    overflow: visible;
     margin-bottom: 24px;
   }
   .table-header {
@@ -164,6 +165,13 @@
   .refresh-btn:hover { background: var(--green-bright); color: #fff; transform: translateY(-1px); }
   .refresh-btn.loading .refresh-icon { animation: spin 0.8s linear infinite; }
 
+  /* 横スクロールする入れ物。ここに角丸を持たせる（.table-wrapがvisibleになったぶん） */
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -180,43 +188,45 @@
     letter-spacing: 0.05em;
     text-align: left;
     white-space: nowrap;
+    background: var(--green-deep);
   }
-  thead th:first-child { border-radius: 0; }
+  /* ★氏名の見出しセルを左に固定 */
+  thead th.name-cell {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--green-deep);
+  }
   tbody tr {
     border-bottom: 1px solid rgba(26,61,43,0.05);
     transition: background 0.12s;
   }
   tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(82,183,136,0.04); }
-  /* 本人の行：オレンジの枠で囲む＋うっすらオレンジ背景 */
-  tbody tr.highlight td { background: var(--orange-light); border-top: 2px solid var(--orange-accent); border-bottom: 2px solid var(--orange-accent); }
-  tbody tr.highlight td:first-child { border-left: 2px solid var(--orange-accent); }
-  tbody tr.highlight td:last-child { border-right: 2px solid var(--orange-accent); }
-  /* 「あなたの注文」バッジ */
-  .you-badge {
-    display: inline-block;
-    margin-left: 8px;
-    font-size: 10px;
-    font-weight: 800;
-    color: #fff;
-    background: var(--orange-accent);
-    padding: 2px 8px;
-    border-radius: 100px;
-    letter-spacing: 0.03em;
-    vertical-align: middle;
-    white-space: nowrap;
-  }
   td {
     padding: 12px 14px;
     vertical-align: top;
     color: var(--text-dark);
+    background: #fff;             /* 既定の背景（固定列が下の列を隠せるように） */
+    border-bottom: 1px solid rgba(26,61,43,0.05);
   }
+  /* 偶数行のしま模様 */
+  tbody tr:nth-child(even) td { background: var(--cream); }
+
   td.name-cell {
     font-weight: 700;
     color: var(--green-deep);
     white-space: nowrap;
-    min-width: 72px;
+    min-width: 96px;
+    /* ★氏名セルを左に固定 */
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    box-shadow: 2px 0 4px rgba(26,61,43,0.06); /* 固定列の右に軽い影 */
   }
+  /* しま模様でも固定列の背景を保つ */
+  tbody tr:nth-child(odd) td.name-cell { background: #fff; }
+  tbody tr:nth-child(even) td.name-cell { background: var(--cream); }
+
   td.menu-cell { min-width: 100px; }
   .menu-tag {
     display: inline-block;
@@ -246,6 +256,27 @@
     white-space: nowrap;
   }
 
+  /* 本人の行：オレンジの枠で囲む＋うっすらオレンジ背景 */
+  tbody tr.highlight td { background: var(--orange-light); border-top: 2px solid var(--orange-accent); border-bottom: 2px solid var(--orange-accent); }
+  tbody tr.highlight td:first-child { border-left: 2px solid var(--orange-accent); }
+  tbody tr.highlight td:last-child { border-right: 2px solid var(--orange-accent); }
+  /* 本人の行の固定された氏名セルも、オレンジ背景を保つ */
+  tbody tr.highlight td.name-cell { background: var(--orange-light); }
+  /* 「あなたの注文」バッジ */
+  .you-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--orange-accent);
+    padding: 2px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.03em;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
   /* EMPTY STATE */
   .empty-row td {
     text-align: center;
@@ -261,14 +292,6 @@
     margin-bottom: 20px;
     flex-wrap: wrap;
     align-items: center;
-  }
-  .filter-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-light);
-    margin-right: 4px;
   }
   .week-chip {
     padding: 6px 16px;
@@ -360,11 +383,11 @@
           <span class="refresh-icon">↻</span> 更新
         </button>
       </div>
-      <div style="overflow-x:auto; border-radius:0 0 18px 18px;">
+      <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th>氏名</th>
+              <th class="name-cell">氏名</th>
               <th>自己負担合計</th>
               <th>火曜</th>
               <th>木曜</th>
