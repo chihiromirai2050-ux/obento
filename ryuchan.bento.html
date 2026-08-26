@@ -1593,8 +1593,8 @@ function loadOrdersTable() {
     if (ctrl) opts.signal = ctrl.signal;
     const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, maxWait);
     return fetch(url, opts)
-      .then(res => res.json())
-      .finally(() => clearTimeout(timer));
+    .then(res => { clearTimeout(timer); return res.json(); })
+    .catch(err => { clearTimeout(timer); throw err; });
   }
 
   // 失敗したら少し待って自動でやり直す（最大3回）
