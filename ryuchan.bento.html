@@ -1582,37 +1582,64 @@ function loadOrdersTable() {
   }
   const refreshBtn = document.getElementById('orders-refresh-btn');
   if (refreshBtn) { refreshBtn.disabled = true; refreshBtn.textContent = '更新中…'; }
-  // キャッシュを完全に無視して最新を取得（?_=時刻 + no-store）
-  const url = GAS_URL + (GAS_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
-  fetch(url, { cache: 'no-store' })
-    .then(res => res.json())
-    .then(data => {
-      ordersAll = data.orders || [];
-      ordersWeeks = [];
-      ordersAll.forEach(o => {
-        const wk = o.weekLabel || 'その他';
-        if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
-      });
-      ordersWeeks = ordersWeeks.reverse().slice(0, 3).reverse();
-            if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-        // フォーム上部で選ばれている週（＝いま締め切りの週）を最初に表示する
-        const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
-        ordersActiveWeek = ordersWeeks.includes(targetWeek)
-          ? targetWeek
-          : (ordersWeeks[ordersWeeks.length - 1] || null); // 見つからなければ一番新しい週
-      }
-      renderOrdersTable();
-    })
-    .catch(() => {
-      if (!hasData) {
-        wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">読み込めませんでした</div>`;
-      }
-    })
-    .finally(() => {
-      if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
-    });
-}
 
+  // 1回分の取得（時間制限つき）。maxWaitミリ秒で返らなければ失敗扱いにする
+  function fetchOnce(maxWait) {
+    const url = GAS_URL + (GAS_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
+    // AbortControllerで時間制限。対応していない環境ではPromise.raceで代用
+    let ctrl = null;
+    try { ctrl = new AbortController(); } catch (e) { ctrl = null; }
+    const opts = { cache: 'no-store' };
+    if (ctrl) opts.signal = ctrl.signal;
+    const timer = setTimeout(() => { if (ctrl) ctrl.abort(); }, maxWait);
+    return fetch(url, opts)
+      .then(res => res.json())
+      .finally(() => clearTimeout(timer));
+  }
+
+  // 失敗したら少し待って自動でやり直す（最大3回）
+  function tryLoad(attempt) {
+    fetchOnce(8000) // 1回あたり最大8秒待つ
+      .then(data => {
+        ordersAll = data.orders || [];
+        ordersWeeks = [];
+        ordersAll.forEach(o => {
+          const wk = o.weekLabel || 'その他';
+          if (!ordersWeeks.includes(wk)) ordersWeeks.push(wk);
+        });
+        ordersWeeks = ordersWeeks.reverse().slice(0, 3).reverse();
+        if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
+          // フォーム上部で選ばれている週（＝いま締め切りの週）を最初に表示する
+          const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
+          ordersActiveWeek = ordersWeeks.includes(targetWeek)
+            ? targetWeek
+            : (ordersWeeks[ordersWeeks.length - 1] || null);
+        }
+        renderOrdersTable();
+        if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
+      })
+      .catch(() => {
+        if (attempt < 3) {
+          // 失敗：700ミリ秒ほど待ってもう一度（回を追うごとに少し長く待つ）
+          if (!hasData) {
+            wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:var(--text-light);font-size:13px;">読み込み中…（再試行 ${attempt}/3）</div>`;
+          }
+          setTimeout(() => tryLoad(attempt + 1), 700 * attempt);
+        } else {
+          // 3回だめだったときだけ、失敗表示（手動で再試行できるボタン付き）
+          if (!hasData) {
+            wrap.innerHTML = `<div style="padding:20px 0;text-align:center;color:#e05252;font-size:13px;">
+              読み込めませんでした
+              <br><button onclick="loadOrdersTable()" style="margin-top:10px;background:var(--cream);border:1.5px solid rgba(26,61,43,0.12);border-radius:100px;padding:6px 16px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;color:var(--green-mid);cursor:pointer;">↻ もう一度試す</button>
+            </div>`;
+          }
+          if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
+        }
+      });
+  }
+
+  tryLoad(1);
+}
 function selectOrdersWeek(wk) {
   ordersActiveWeek = wk;
   renderOrdersTable();
