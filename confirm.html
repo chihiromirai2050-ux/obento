@@ -34,7 +34,7 @@
   .header {
     background: var(--green-deep);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
   .header::before {
     content: '';
@@ -360,7 +360,7 @@
           <span class="refresh-icon">↻</span> 更新
         </button>
       </div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto; border-radius:0 0 18px 18px;">
         <table>
           <thead>
             <tr>
