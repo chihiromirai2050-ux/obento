@@ -1572,6 +1572,43 @@ let ordersAll = [];
 let ordersWeeks = [];
 let ordersActiveWeek = null;
 
+// 週ラベル一覧から「今日に近い直近3週」を選び、古い順（左→右）に並べて返す
+function buildRecentWeeks(orders) {
+  const today = new Date();
+  const set = [];
+  orders.forEach(o => {
+    const wk = o.weekLabel || '';
+    if (wk && !set.includes(wk)) set.push(wk);
+  });
+
+  // 週ラベルの火曜日付を Date にする（年は今日を基準に推定）
+  const toDate = (label) => {
+    const m = label.match(/(\d+)\/(\d+)/);
+    if (!m) return null;
+    const month = Number(m[1]);
+    const day = Number(m[2]);
+    const y = today.getFullYear();
+    let d = new Date(y, month - 1, day);
+    const diffDays = (d - today) / 86400000;
+    if (diffDays > 182) d = new Date(y - 1, month - 1, day);
+    else if (diffDays < -182) d = new Date(y + 1, month - 1, day);
+    return d;
+  };
+
+  const withDate = set.map(label => {
+    const d = toDate(label);
+    return { label, time: d ? d.getTime() : -Infinity };
+  });
+
+  // 今日との差が小さい順に3つ取り、その後で古い→新しい順に並べる
+  const sortedByCloseness = withDate.slice().sort((a, b) =>
+    Math.abs(a.time - today.getTime()) - Math.abs(b.time - today.getTime())
+  );
+  const top3 = sortedByCloseness.slice(0, 3);
+  top3.sort((a, b) => a.time - b.time);
+  return top3.map(x => x.label);
+}
+  
 function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
@@ -1583,11 +1620,9 @@ function loadOrdersTable() {
       const cached = sessionStorage.getItem('ordersCache');
       if (cached) {
         const obj = JSON.parse(cached);
-        if (obj && Array.isArray(obj.orders) && obj.orders.length) {
+                if (obj && Array.isArray(obj.orders) && obj.orders.length) {
           ordersAll = obj.orders;
-          ordersWeeks = [];
-          ordersAll.forEach(o => { const wk=o.weekLabel||'その他'; if(!ordersWeeks.includes(wk))ordersWeeks.push(wk); });
-          ordersWeeks = ordersWeeks.reverse().slice(0,3).reverse();
+          ordersWeeks = buildRecentWeeks(ordersAll);
           if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
             const tw = getWeekDates(currentWeekOffset).weekLabel;
             ordersActiveWeek = ordersWeeks.includes(tw) ? tw : (ordersWeeks[ordersWeeks.length-1]||null);
@@ -1622,16 +1657,17 @@ function loadOrdersTable() {
   function tryLoad(attempt) {
     fetchOnce(8000)
       .then(data => {
-        ordersAll = data.orders || [];
-        // 取れた最新データを一時保存（次回開いたとき即表示するため）
-        try { sessionStorage.setItem('ordersCache', JSON.stringify({ orders: ordersAll, t: Date.now() })); } catch (e) {}
-        ordersWeeks = [];
-        ordersAll.forEach(o => { const wk=o.weekLabel||'その他'; if(!ordersWeeks.includes(wk))ordersWeeks.push(wk); });
-        ordersWeeks = ordersWeeks.reverse().slice(0,3).reverse();
-        if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-          const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
-          ordersActiveWeek = ordersWeeks.includes(targetWeek) ? targetWeek : (ordersWeeks[ordersWeeks.length-1] || null);
-        }
+      ordersAll = data.orders || [];
+      // 取れた最新データを一時保存（次回開いたとき即表示するため）
+      try { sessionStorage.setItem('ordersCache', JSON.stringify({ orders: ordersAll, t: Date.now() })); } catch (e) {}
+
+      // 週ラベルを集めて、日付で新しい順に並べてから直近3週を取る
+      ordersWeeks = buildRecentWeeks(ordersAll);
+
+      if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
+        const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
+        ordersActiveWeek = ordersWeeks.includes(targetWeek) ? targetWeek : (ordersWeeks[ordersWeeks.length-1] || null);
+      }
         renderOrdersTable();
         if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
       })
