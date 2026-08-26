@@ -783,7 +783,7 @@ const NAMES = [
   '社長','小野塚','黒田','白石','長谷川','澤田','萬石','みちる','荒木',
   '若栗','加藤','岩崎','中村叶','中川','原田','杉木','野尻','森山','久保',
   '古滝','若菜','ちひろ','飛彩','鈴木','笹川','嶋田','西山','深田',
-  '石川','嶋崎','太田',
+  '石川','嶋崎',
 ];
 
 let nameActiveIdx = -1;
@@ -1608,7 +1608,7 @@ function buildRecentWeeks(orders) {
   top3.sort((a, b) => a.time - b.time);
   return top3.map(x => x.label);
 }
-  
+
 function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
@@ -1620,7 +1620,7 @@ function loadOrdersTable() {
       const cached = sessionStorage.getItem('ordersCache');
       if (cached) {
         const obj = JSON.parse(cached);
-                if (obj && Array.isArray(obj.orders) && obj.orders.length) {
+        if (obj && Array.isArray(obj.orders) && obj.orders.length) {
           ordersAll = obj.orders;
           ordersWeeks = buildRecentWeeks(ordersAll);
           if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
@@ -1657,17 +1657,17 @@ function loadOrdersTable() {
   function tryLoad(attempt) {
     fetchOnce(8000)
       .then(data => {
-      ordersAll = data.orders || [];
-      // 取れた最新データを一時保存（次回開いたとき即表示するため）
-      try { sessionStorage.setItem('ordersCache', JSON.stringify({ orders: ordersAll, t: Date.now() })); } catch (e) {}
+        ordersAll = data.orders || [];
+        // 取れた最新データを一時保存（次回開いたとき即表示するため）
+        try { sessionStorage.setItem('ordersCache', JSON.stringify({ orders: ordersAll, t: Date.now() })); } catch (e) {}
 
-      // 週ラベルを集めて、日付で新しい順に並べてから直近3週を取る
-      ordersWeeks = buildRecentWeeks(ordersAll);
+        // 週ラベルを集めて、日付で新しい順に並べてから直近3週を取る
+        ordersWeeks = buildRecentWeeks(ordersAll);
 
-      if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-        const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
-        ordersActiveWeek = ordersWeeks.includes(targetWeek) ? targetWeek : (ordersWeeks[ordersWeeks.length-1] || null);
-      }
+        if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
+          const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
+          ordersActiveWeek = ordersWeeks.includes(targetWeek) ? targetWeek : (ordersWeeks[ordersWeeks.length-1] || null);
+        }
         renderOrdersTable();
         if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
       })
@@ -1693,7 +1693,7 @@ function loadOrdersTable() {
 
   tryLoad(1);
 }
-  
+
 function selectOrdersWeek(wk) {
   ordersActiveWeek = wk;
   renderOrdersTable();
@@ -1707,8 +1707,8 @@ function renderOrdersTable() {
     return;
   }
 
-  // 週ラベルから火・木・金の日付(M/D)を取り出す。金曜が欠けていれば木曜+1日で補う。
-    const parseWeek = (raw) => {
+  // 週ラベルから火・木・金の日付(M/D)を取り出す。金曜が欠けていれば火曜基準で補う。
+  const parseWeek = (raw) => {
     let tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
     let thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
     let fri = (raw.match(/(\d+\/\d+)\(金\)/) || [])[1] || null;
@@ -1718,18 +1718,17 @@ function renderOrdersTable() {
       const d = new Date(y, mm - 1, dd + n);
       return `${d.getMonth() + 1}/${d.getDate()}`;
     };
-    // 火曜を基準に、抜けている木曜(火+2)・金曜(火+3)を補う
     if (tue) {
       if (!thu) thu = addDays(tue, 2);
       if (!fri) fri = addDays(tue, 3);
     } else if (thu) {
-      // 火曜が無い場合は木曜を基準にする
       if (!tue) tue = addDays(thu, -2);
       if (!fri) fri = addDays(thu, 1);
     }
     return { 火: tue, 木: thu, 金: fri };
   };
-  // M/D が休業日(CLOSED_DATES)かどうか。年は「今年」を基準に判定する。
+
+  // M/D が休業日かどうか（今年を基準に判定）
   const isClosedMD = (md) => {
     if (!md) return false;
     const [m, d] = md.split('/').map(Number);
@@ -1833,14 +1832,14 @@ function toggleOrdersTable() {
 document.getElementById('target-week').textContent =
   `${dates[0]}(火)・${dates[1]}(木)・${dates[2]}(金)`;
 
-// ── 追加：先読み & 復帰時の自動更新 ──────────────
-// ページを開いた時点で裏側で先読み（開いた瞬間に表示できるように）
+// ── 先読み & 復帰時の自動更新 ──────────────
+// ページを開いた時点で裏側で先読み（パネルを開いた瞬間に表示できるように）
 loadOrdersTable();
 // スマホの「戻る」で戻ってきた時（bfcache）にも最新へ更新
 window.addEventListener('pageshow', function (e) {
   if (e.persisted) loadOrdersTable();
 });
-  
+
 </script>
 </body>
 </html>
