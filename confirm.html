@@ -408,6 +408,31 @@
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwxc04eQzWcoWH1dzv-u40fGfY7vfGETM1WHO13O6nZlVFjOW5a3TJmZMTzCLUvwLhK/exec';
 
+// ── フォームと同じ「これから届く週」の計算（履歴の週をフォームに合わせるため）──
+function getBaseMonday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dow = today.getDay();
+  const thisMon = new Date(today);
+  const diffToMon = (dow === 0) ? -6 : (1 - dow);
+  thisMon.setDate(today.getDate() + diffToMon);
+  thisMon.setHours(0, 0, 0, 0);
+  const deliveryTue = new Date(thisMon);
+  deliveryTue.setDate(thisMon.getDate() + 8);
+  const base = new Date(thisMon);
+  base.setDate(thisMon.getDate() + (today > deliveryTue ? 14 : 7));
+  return base;
+}
+function getWeekLabelByOffset(offset) {
+  const mon = getBaseMonday();
+  mon.setDate(mon.getDate() + offset * 7);
+  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
+  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
+  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
+  return `${fmt(tue)}(火)・${fmt(thu)}(木)・${fmt(fri)}(金)`;
+}
+
 // 休業日（提供なし）の日付。注文フォームと同じ内容にしておく
 const CLOSED_DATES = [
   '2026-04-03',
@@ -489,34 +514,8 @@ function updateHeaderWeek() {
 }
 
 function getWeeks() {
-  // 週ラベルを集めて、今日に近い直近3週を古い順（左→右）に並べる
-  const set = [];
-  allOrders.forEach(o => {
-    if (o.weekLabel && !set.includes(o.weekLabel)) set.push(o.weekLabel);
-  });
-  const today = new Date();
-  const toDate = (label) => {
-    const m = label.match(/(\d+)\/(\d+)/);
-    if (!m) return null;
-    const month = Number(m[1]);
-    const day = Number(m[2]);
-    const y = today.getFullYear();
-    let d = new Date(y, month - 1, day);
-    const diffDays = (d - today) / 86400000;
-    if (diffDays > 182) d = new Date(y - 1, month - 1, day);
-    else if (diffDays < -182) d = new Date(y + 1, month - 1, day);
-    return d;
-  };
-  const withDate = set.map(label => {
-    const d = toDate(label);
-    return { label, time: d ? d.getTime() : -Infinity };
-  });
-  const sortedByCloseness = withDate.slice().sort((a, b) =>
-    Math.abs(a.time - today.getTime()) - Math.abs(b.time - today.getTime())
-  );
-  const top3 = sortedByCloseness.slice(0, 3);
-  top3.sort((a, b) => a.time - b.time);
-  return top3.map(x => x.label);
+  // フォームで選べる週（これから届く3週）に合わせる
+  return [0, 1, 2].map(o => getWeekLabelByOffset(o));
 }
 
 function getFilteredOrders() {
