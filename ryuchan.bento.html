@@ -1572,14 +1572,11 @@ let ordersAll = [];
 let ordersWeeks = [];
 let ordersActiveWeek = null;
 
-// 週ラベル一覧から「今日に近い直近3週」を選び、古い順（左→右）に並べて返す
+// 履歴に出す週を「フォームで選べる週（これから届く3週）」に合わせる
 function buildRecentWeeks(orders) {
-  const today = new Date();
-  const set = [];
-  orders.forEach(o => {
-    const wk = o.weekLabel || '';
-    if (wk && !set.includes(wk)) set.push(wk);
-  });
+  // フォーム上部の週選択と同じ3週のラベルを作る（9/22・9/29・10/6 のような未来の週）
+  return WEEK_OPTIONS.map(w => getWeekDates(w.offset).weekLabel);
+}
 
   // 週ラベルの火曜日付を Date にする（年は今日を基準に推定）
   const toDate = (label) => {
