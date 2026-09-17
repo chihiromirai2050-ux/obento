@@ -1578,34 +1578,6 @@ function buildRecentWeeks(orders) {
   return WEEK_OPTIONS.map(w => getWeekDates(w.offset).weekLabel);
 }
 
-  // 週ラベルの火曜日付を Date にする（年は今日を基準に推定）
-  const toDate = (label) => {
-    const m = label.match(/(\d+)\/(\d+)/);
-    if (!m) return null;
-    const month = Number(m[1]);
-    const day = Number(m[2]);
-    const y = today.getFullYear();
-    let d = new Date(y, month - 1, day);
-    const diffDays = (d - today) / 86400000;
-    if (diffDays > 182) d = new Date(y - 1, month - 1, day);
-    else if (diffDays < -182) d = new Date(y + 1, month - 1, day);
-    return d;
-  };
-
-  const withDate = set.map(label => {
-    const d = toDate(label);
-    return { label, time: d ? d.getTime() : -Infinity };
-  });
-
-  // 今日との差が小さい順に3つ取り、その後で古い→新しい順に並べる
-  const sortedByCloseness = withDate.slice().sort((a, b) =>
-    Math.abs(a.time - today.getTime()) - Math.abs(b.time - today.getTime())
-  );
-  const top3 = sortedByCloseness.slice(0, 3);
-  top3.sort((a, b) => a.time - b.time);
-  return top3.map(x => x.label);
-}
-
 function loadOrdersTable() {
   const wrap = document.getElementById('orders-table-wrap');
   if (!wrap) return;
