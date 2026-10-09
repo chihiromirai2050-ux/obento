@@ -1578,10 +1578,11 @@ let ordersAll = [];
 let ordersWeeks = [];
 let ordersActiveWeek = null;
 
-// 履歴に出す週を「フォームで選べる週（これから届く3週）」に合わせる
+// 履歴に出す週：今日を含む「今週」(offset -1) ＋ これから届く3週(0・1・2)
 function buildRecentWeeks(orders) {
-  // フォーム上部の週選択と同じ3週のラベルを作る（9/22・9/29・10/6 のような未来の週）
-  return WEEK_OPTIONS.map(w => getWeekDates(w.offset).weekLabel);
+  // 今週を先頭に足すことで、締め切りが過ぎた今日の分も確認できるようにする
+  const offsets = [-1, ...WEEK_OPTIONS.map(w => w.offset)];
+  return offsets.map(o => getWeekDates(o).weekLabel);
 }
 
 function loadOrdersTable() {
@@ -1599,8 +1600,8 @@ function loadOrdersTable() {
           ordersAll = obj.orders;
           ordersWeeks = buildRecentWeeks(ordersAll);
           if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-            const tw = getWeekDates(currentWeekOffset).weekLabel;
-            ordersActiveWeek = ordersWeeks.includes(tw) ? tw : (ordersWeeks[ordersWeeks.length-1]||null);
+            const curWeek = getWeekDates(-1).weekLabel; // 今日を含む「今週」を初期表示に
+            ordersActiveWeek = ordersWeeks.includes(curWeek) ? curWeek : (ordersWeeks[ordersWeeks.length-1]||null);
           }
           renderOrdersTable(); // 前回分をすぐ表示
         }
@@ -1640,8 +1641,8 @@ function loadOrdersTable() {
         ordersWeeks = buildRecentWeeks(ordersAll);
 
         if (!ordersActiveWeek || !ordersWeeks.includes(ordersActiveWeek)) {
-          const targetWeek = getWeekDates(currentWeekOffset).weekLabel;
-          ordersActiveWeek = ordersWeeks.includes(targetWeek) ? targetWeek : (ordersWeeks[ordersWeeks.length-1] || null);
+          const curWeek = getWeekDates(-1).weekLabel; // 今日を含む「今週」を初期表示に
+          ordersActiveWeek = ordersWeeks.includes(curWeek) ? curWeek : (ordersWeeks[ordersWeeks.length-1] || null);
         }
         renderOrdersTable();
         if (refreshBtn) { refreshBtn.disabled = false; refreshBtn.textContent = '↻ 更新'; }
