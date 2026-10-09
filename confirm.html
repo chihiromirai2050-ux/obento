@@ -479,11 +479,12 @@ async function loadOrders(force = false) {
 
     const weeks = getWeeks();
     if (!selectedWeek || !weeks.includes(selectedWeek)) {
-      // 注文フォームから来た場合はその週を、なければ最新週を最初に表示
+      // 注文フォームから来た場合はその週を、なければ今日を含む「今週」を最初に表示
       if (justOrderedWeek && weeks.includes(justOrderedWeek)) {
         selectedWeek = justOrderedWeek;
       } else {
-        selectedWeek = weeks.length ? weeks[weeks.length - 1] : null;
+        const curWeek = getWeekLabelByOffset(-1); // 今日を含む今週
+        selectedWeek = weeks.includes(curWeek) ? curWeek : (weeks.length ? weeks[weeks.length - 1] : null);
       }
     }
 
@@ -514,8 +515,8 @@ function updateHeaderWeek() {
 }
 
 function getWeeks() {
-  // フォームで選べる週（これから届く3週）に合わせる
-  return [0, 1, 2].map(o => getWeekLabelByOffset(o));
+  // 今日を含む「今週」(-1) ＋ これから届く3週(0・1・2)。締め切りが過ぎた今日の分も確認できるように
+  return [-1, 0, 1, 2].map(o => getWeekLabelByOffset(o));
 }
 
 function getFilteredOrders() {
