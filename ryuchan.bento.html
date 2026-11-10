@@ -690,20 +690,18 @@
   <!-- メニュー選択 -->
   <div class="menu-section fade-in">
     <!-- メニュータブ -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;">
-      <button id="tab-kami" onclick="switchTab('kami')" style="flex:1;padding:10px 4px;background:var(--green-pale);color:var(--green-deep);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.3;">月・火・水メニュー🍱</button>
-      <button id="tab-thu" onclick="switchTab('thu')" style="flex:1;padding:10px 4px;background:#eee;color:var(--text-mid);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.3;">木メニュー🍱</button>
-      <button id="tab-fri" onclick="switchTab('fri')" style="flex:1;padding:10px 4px;background:#eee;color:var(--text-mid);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;cursor:pointer;line-height:1.3;">金メニュー🍱</button>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button id="tab-kami" onclick="switchTab('kami')" style="flex:1;padding:10px 4px;background:var(--green-pale);color:var(--green-deep);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;">月・火・水🍱</button>
+      <button id="tab-thu" onclick="switchTab('thu')" style="flex:1;padding:10px 4px;background:#eee;color:var(--text-mid);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;">木🍱</button>
+      <button id="tab-fri" onclick="switchTab('fri')" style="flex:1;padding:10px 4px;background:#eee;color:var(--text-mid);border:none;border-radius:10px;font-family:'Noto Sans JP',sans-serif;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;">金🍱</button>
     </div>
-    <!-- 看板：中央揃え -->
-    <div style="text-align:center;margin-bottom:12px;">
-      <div style="position:relative;display:inline-block;background:#d4d4d4;border:2px solid #aaa;border-radius:4px;padding:10px 28px;box-shadow:2px 2px 4px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.7);">
-        <div style="position:absolute;top:5px;left:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
-        <div style="position:absolute;top:5px;right:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
-        <div style="position:absolute;bottom:5px;left:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
-        <div style="position:absolute;bottom:5px;right:6px;width:8px;height:8px;background:#999;border-radius:50%;border:1px solid #777;box-shadow:inset 0 1px 0 rgba(255,255,255,0.5);"></div>
-        <span id="menu-section-label" style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:16px;font-weight:800;color:#222;letter-spacing:0.05em;">かみの屋🏠</span>
+    <!-- お店バナー（タブに応じてお店名・対象曜日・帯の色が切り替わる）-->
+    <div id="shop-banner" style="display:flex;align-items:center;gap:14px;background:#1a3d2b;border-radius:12px;padding:15px 18px;margin-bottom:18px;box-shadow:0 4px 16px rgba(26,61,43,0.18);transition:background 0.25s;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.55);margin-bottom:3px;">お弁当屋さん</div>
+        <div id="menu-section-label" style="font-family:'M PLUS Rounded 1c',sans-serif;font-size:23px;font-weight:800;line-height:1.15;color:#fff;">かみの屋</div>
       </div>
+      <div id="shop-days" style="background:rgba(255,255,255,0.16);color:#fff;border:1px solid rgba(255,255,255,0.28);font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px;white-space:nowrap;">月・火・水</div>
     </div>
 
     <div id="menu-area"></div>
@@ -858,7 +856,7 @@ function nameKeydown(e) {
 // ── かみの屋（月・火・水）──────────────────────────
 // ✏️ かみの屋メニューはここを編集してください
 const KAMI_OKAZU = [
-  { name: 'おまかせ', items: [
+  { name: 'おまかせ弁当', items: [
     { id:'KA1', name:'普通', price: 700 },
     { id:'KA2', name:'大盛', price: 800 },
   ]},
@@ -1038,6 +1036,22 @@ const skipped    = { 月: false, 火: false, 水: false, 木: false, 金: false 
 // ── メニューエリア描画 ──────────────────────────
 let currentTab = 'kami'; // 'kami'(月火水) / 'thu'(木) / 'fri'(金)
 
+// お店ごとの表示情報（バナーのお店名・対象曜日・帯の色）
+const SHOP_INFO = {
+  kami: { name: 'かみの屋',        days: '月・火・水', fill: '#1a3d2b' },
+  thu:  { name: '隆ちゃん弁当',     days: '木',        fill: '#6e3b24' },
+  fri:  { name: 'おひさまkitchen', days: '金',        fill: '#6f5520' },
+};
+
+// お店バナーをタブに合わせて切り替える（お店名・曜日・帯の色が変わる）
+function updateShopBanner(tab) {
+  const s = SHOP_INFO[tab] || SHOP_INFO.kami;
+  const banner = document.getElementById('shop-banner');
+  if (banner) banner.style.background = s.fill;
+  const nm = document.getElementById('menu-section-label'); if (nm) nm.textContent = s.name;
+  const dy = document.getElementById('shop-days'); if (dy) dy.textContent = s.days;
+}
+
 function switchTab(tab) {
   currentTab = tab;
   const setBtn = (id, on) => {
@@ -1049,8 +1063,7 @@ function switchTab(tab) {
   setBtn('tab-kami', tab === 'kami');
   setBtn('tab-thu',  tab === 'thu');
   setBtn('tab-fri',  tab === 'fri');
-  document.getElementById('menu-section-label').textContent =
-    tab === 'kami' ? 'かみの屋🏠' : tab === 'fri' ? 'おひさまkitchen🏠' : '隆ちゃん弁当🏠';
+  updateShopBanner(tab);
   renderMenuArea();
   document.querySelector('.menu-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1609,6 +1622,7 @@ function resetForm() {
 
 renderWeekTabs();
 renderMenuArea();
+updateShopBanner(currentTab);
 renderDays();
 updateAll();
 // 締め切り日を表示（wedDeadlineはgetNextWeekDates内で計算済みの日付を利用）
