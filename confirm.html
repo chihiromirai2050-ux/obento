@@ -389,14 +389,16 @@
             <tr>
               <th class="name-cell">氏名</th>
               <th>自己負担合計</th>
+              <th>月曜</th>
               <th>火曜</th>
+              <th>水曜</th>
               <th>木曜</th>
               <th>金曜</th>
               <th>送信日時</th>
             </tr>
           </thead>
           <tbody id="order-table-body">
-            <tr class="empty-row"><td colspan="6">データがありません</td></tr>
+            <tr class="empty-row"><td colspan="8">データがありません</td></tr>
           </tbody>
         </table>
       </div>
@@ -424,27 +426,31 @@ function getBaseMonday() {
   return base;
 }
 function getWeekLabelByOffset(offset) {
-  const mon = getBaseMonday();
-  mon.setDate(mon.getDate() + offset * 7);
-  const tue = new Date(mon); tue.setDate(mon.getDate() + 1);
-  const thu = new Date(mon); thu.setDate(mon.getDate() + 3);
-  const fri = new Date(mon); fri.setDate(mon.getDate() + 4);
+  const mon0 = getBaseMonday();
+  mon0.setDate(mon0.getDate() + offset * 7);
+  const mk = n => { const d = new Date(mon0); d.setDate(mon0.getDate() + n); return d; };
   const fmt = d => `${d.getMonth()+1}/${d.getDate()}`;
-  return `${fmt(tue)}(火)・${fmt(thu)}(木)・${fmt(fri)}(金)`;
+  return `${fmt(mk(0))}(月)・${fmt(mk(1))}(火)・${fmt(mk(2))}(水)・${fmt(mk(3))}(木)・${fmt(mk(4))}(金)`;
 }
 
 // 休業日（提供なし）の日付。注文フォームと同じ内容にしておく
 const CLOSED_DATES = [
   '2026-04-03',
-  '2025-05-01',
+  '2026-05-01',
   '2026-06-01',
   '2026-07-24',
   '2026-08-13',
   '2026-08-14',
+  '2026-09-22',
   '2026-10-12',
+  '2026-11-03',
   '2026-12-31',
   '2027-01-01',
   '2027-01-02',
+  '2027-02-11',
+  '2027-02-23',
+  '2027-04-29',
+  '2027-05-04',
 ];
 
 document.getElementById('header-week').textContent = '📅 読み込み中…';
@@ -526,23 +532,23 @@ function getFilteredOrders() {
 
 // ── 週ラベルの日付を取り出す（金曜が欠けていれば火曜基準で補う）──
 function parseWeek(raw) {
-  let tue = (raw.match(/(\d+\/\d+)\(火\)/) || [])[1] || null;
-  let thu = (raw.match(/(\d+\/\d+)\(木\)/) || [])[1] || null;
-  let fri = (raw.match(/(\d+\/\d+)\(金\)/) || [])[1] || null;
+  const g = (dow) => (raw.match(new RegExp(`(\\d+\\/\\d+)\\(${dow}\\)`)) || [])[1] || null;
+  let mon = g('月'), tue = g('火'), wed = g('水'), thu = g('木'), fri = g('金');
   const y = new Date().getFullYear();
   const addDays = (md, n) => {
     const [mm, dd] = md.split('/').map(Number);
     const d = new Date(y, mm - 1, dd + n);
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
-  if (tue) {
-    if (!thu) thu = addDays(tue, 2);
-    if (!fri) fri = addDays(tue, 3);
-  } else if (thu) {
-    if (!tue) tue = addDays(thu, -2);
-    if (!fri) fri = addDays(thu, 1);
+  const base = mon ? { d: mon, off: 0 } : tue ? { d: tue, off: 1 } : wed ? { d: wed, off: 2 } : thu ? { d: thu, off: 3 } : fri ? { d: fri, off: 4 } : null;
+  if (base) {
+    if (!mon) mon = addDays(base.d, -base.off);
+    if (!tue) tue = addDays(mon, 1);
+    if (!wed) wed = addDays(mon, 2);
+    if (!thu) thu = addDays(mon, 3);
+    if (!fri) fri = addDays(mon, 4);
   }
-  return { 火: tue, 木: thu, 金: fri };
+  return { 月: mon, 火: tue, 水: wed, 木: thu, 金: fri };
 }
 
 // M/D が休業日かどうか（今年を基準に判定）
@@ -554,14 +560,11 @@ function isClosedMD(md) {
   return CLOSED_DATES.includes(iso);
 }
 
-// タブ・バナー用：お休みの曜日を除いた日付表記
+// タブ・バナー用：コンパクトに「月〜金」の範囲で表記
 function labelForWeek(raw) {
   const w = parseWeek(raw);
-  const parts = [];
-  if (w.火 && !isClosedMD(w.火)) parts.push(`${w.火}(火)`);
-  if (w.木 && !isClosedMD(w.木)) parts.push(`${w.木}(木)`);
-  if (w.金 && !isClosedMD(w.金)) parts.push(`${w.金}(金)`);
-  return parts.length ? parts.join('・') : raw;
+  if (w.月 && w.金) return `${w.月}(月)〜${w.金}(金)`;
+  return raw;
 }
 
 function renderWeekFilter() {
@@ -592,13 +595,15 @@ function renderTable() {
   const tbody = document.getElementById('order-table-body');
 
   if (!orders.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">注文がありません</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">注文がありません</td></tr>';
     return;
   }
 
   // この週でお休みの曜日を判定
-  const wk = selectedWeek ? parseWeek(selectedWeek) : { 火: null, 木: null, 金: null };
+  const wk = selectedWeek ? parseWeek(selectedWeek) : { 月: null, 火: null, 水: null, 木: null, 金: null };
+  const closedMon = isClosedMD(wk.月);
   const closedTue = isClosedMD(wk.火);
+  const closedWed = isClosedMD(wk.水);
   const closedThu = isClosedMD(wk.木);
   const closedFri = isClosedMD(wk.金);
 
@@ -620,7 +625,9 @@ function renderTable() {
     <tr class="${isMine ? 'highlight' : ''}" ${isMine ? 'id="my-order-row"' : ''}>
       <td class="name-cell">${o.name || ''}${isMine ? '<span class="you-badge">あなたの注文</span>' : ''}</td>
       <td class="total-cell">${o.total ? '¥' + Number(o.total).toLocaleString() : '—'}</td>
+      <td class="menu-cell">${menuCell(o.mon, closedMon)}</td>
       <td class="menu-cell">${menuCell(o.tue, closedTue)}</td>
+      <td class="menu-cell">${menuCell(o.wed, closedWed)}</td>
       <td class="menu-cell">${menuCell(o.thu, closedThu)}</td>
       <td class="menu-cell">${menuCell(o.fri, closedFri)}</td>
       <td class="ts-cell">${o.ts || ''}</td>
